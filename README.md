@@ -36,9 +36,9 @@ The long-term vision is to create an intelligent monitoring system that can dete
 
 ---
 
-# 🎯 Current Status: Phase 2 Prototype
+# 🎯 Current Status: Phase 3 Complete (Custom Elephant Model Integrated)
 
-The project has completed **Phase 2 (Real-Time Webcam Detection System)**.
+The project has achieved full integration of our fine-tuned custom YOLO elephant detection model (`elephant_v1`) into the real-time webcam detection system (`elephant_camera.py`), replacing the generic COCO model while preserving all Phase 2 persistence, cooldown, and HUD logic.
 
 ### Phase 2 Architecture Pipeline
 
@@ -86,14 +86,43 @@ The project has completed **Phase 2 (Real-Time Webcam Detection System)**.
 ```text
 Elephant_detector/
 │
-├── elephant_camera.py   # Real-time webcam detector with persistence, cooldown, and HUD
-├── detect.py            # Static image detection script
-├── camera.py            # Basic OpenCV webcam test script
-├── test_phase2.py       # Automated verification test suite for Phase 2
-├── elephant.jpg         # Sample test image
-├── yolo26n.pt           # Pretrained YOLO model weights
-├── requirements.txt     # Python package dependencies
-└── README.md            # Project documentation and roadmap
+├── ai/
+│   ├── train.py              # Fine-tuning transfer learning script
+│   ├── evaluate.py           # Model validation, mAP reporting, and test prediction generator
+│   ├── predict_custom.py     # Single-image inference using the custom elephant model
+│   ├── compare_models.py     # Side-by-side comparison between baseline and custom models
+│   ├── validate_dataset.py   # Dataset structure and annotation validation utility
+│   └── visualize_dataset.py  # Visual inspection tool for YOLO labels and bounding boxes
+│
+├── datasets/
+│   └── elephant/
+│       ├── images/           # Images organized by split (train: 315, val: 68, test: 73)
+│       ├── labels/           # Matching YOLO label text files (train: 315, val: 68, test: 73)
+│       ├── data.yaml         # Dataset configuration file for Ultralytics YOLO
+│       ├── metadata.json     # Dataset manifest and original source tracking
+│       └── README.md         # Comprehensive dataset & YOLO annotation guide
+│
+├── models/
+│   ├── README.md             # Model changelog, deployment specifications, and version guide
+│   └── elephant_v1/
+│       ├── best.pt           # Deployed fine-tuned custom elephant model weights
+│       └── README.md         # Experiment notes
+│
+├── runs/
+│   └── detect/
+│       └── elephant_v1/      # Full training run artifacts, plots, and MODEL_REPORT.md
+│
+├── elephant_camera.py        # Real-time webcam detector with custom model, persistence, HUD
+├── detect.py                 # Static image detection script
+├── camera.py                 # Basic OpenCV webcam test script
+├── test_phase2.py            # Automated verification test suite for Phase 2
+├── test_phase3_1.py          # Automated verification test suite for Phase 3.1
+├── test_phase3_2.py          # Automated verification test suite for Phase 3.2
+├── test_phase3_4.py          # Automated verification test suite for Phase 3.4
+├── elephant.jpg              # Sample test image
+├── yolo26n.pt                # Pretrained base YOLO model weights
+├── requirements.txt          # Python package dependencies
+└── README.md                 # Project documentation and roadmap
 ```
 
 ---
@@ -164,12 +193,95 @@ python detect.py
 
 ---
 
-## 3. Run Automated Logic Tests
+---
 
-To verify detection, persistence counter, counter reset, alert triggering, and cooldown logic:
+## Running the Custom Model
+
+When custom-model mode is enabled, Project Zogan's live detector loads our validated, specialized model:
+`runs/detect/elephant_v1/weights/best.pt` (or `models/elephant_v1/best.pt`).
+
+### A. Real-Time Detection with Custom Model (Live Detector)
+By default, [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py) now automatically loads our custom fine-tuned model (`elephant_v1`):
+
+```powershell
+python elephant_camera.py
+```
+
+At startup, the detector displays:
+```text
+============================================================
+🐘 PROJECT ZOGAN — ELEPHANT DETECTION SYSTEM
+Model: elephant_v1
+Weights: models/elephant_v1/best.pt
+Target Class: elephant
+Confidence Threshold: 70%
+Required Detections: 5
+Alert Cooldown: 30s
+============================================================
+```
+
+### B. Switching Back to Pretrained Model
+To run side-by-side A/B testing or switch back to the generic COCO pretrained model (`yolo26n.pt`):
+
+```powershell
+python elephant_camera.py --pretrained
+```
+Alternatively, set `USE_CUSTOM_MODEL = False` in [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py).
+
+### C. Single Image Custom Prediction
+Run detection on any test image using our custom model directly:
+
+```powershell
+python ai/predict_custom.py elephant.jpg
+```
+
+### D. Side-by-Side Model Comparison
+Compare detections, confidences, and inference latencies between baseline `yolo26n.pt` and custom `elephant_v1` on the exact same image:
+
+```powershell
+python ai/compare_models.py elephant.jpg
+```
+
+### E. Model Training & Evaluation Pipeline
+To retrain or re-evaluate the custom model:
+
+```powershell
+# Validate dataset integrity
+python ai/validate_dataset.py
+
+# Train custom model (transfer learning from yolo26n.pt)
+python ai/train.py --epochs 15 --imgsz 416 --batch 16
+
+# Evaluate on validation and unseen test sets
+python ai/evaluate.py
+```
+
+---
+
+## 4. Run Automated Test Suites
+
+To verify Phase 2 real-time detection, persistence, cooldown, and HUD rendering:
 
 ```powershell
 python test_phase2.py
+```
+
+To verify Phase 3.1 dataset infrastructure, YAML configuration, and validator error handling:
+
+```powershell
+python test_phase3_1.py
+```
+
+To verify Phase 3.2 custom dataset integrity, counts, zero leakage, decoding, and labels:
+
+```powershell
+python test_phase3_2.py
+```
+
+To verify Phase 3.4 custom model integration, model switching, class mapping, and end-to-end pipeline:
+
+```powershell
+python test_phase3_4.py
 ```
 
 ---
@@ -179,8 +291,11 @@ python test_phase2.py
 All key parameters are easily configurable at the top of [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py):
 
 ```python
-# Path to the pretrained YOLO model weights
-MODEL_PATH = "yolo26n.pt"
+# Model selection configuration
+USE_CUSTOM_MODEL = True
+CUSTOM_MODEL_PATH = "models/elephant_v1/best.pt"
+FALLBACK_MODEL_PATH = "runs/detect/elephant_v1/weights/best.pt"
+PRETRAINED_MODEL_PATH = "yolo26n.pt"
 
 # Minimum confidence required to accept an elephant detection (70%)
 CONFIDENCE_THRESHOLD = 0.70
@@ -223,13 +338,13 @@ When an elephant is confirmed and an alert is dispatched, an `ALERT_COOLDOWN_SEC
 
 ---
 
-# ⚠️ Current Limitations (Phase 2)
+# ⚠️ Current Limitations (Phase 3.4)
 
-* **Pretrained General YOLO Model**: The current system uses `yolo26n.pt` trained on general COCO classes. While it identifies elephants well in clear standard photos, it may struggle with occluded elephants, herd formations, night footage, or distant animals in dense foliage.
+* **Pretrained vs Custom Domain**: `elephant_v1` was trained predominantly on African Savannah elephants. Domain shift on Asian forest elephants, extreme night footage, or adverse weather may require future synthetic or domain-specific dataset expansion.
 * **Lighting Dependency**: Standard RGB webcams are sensitive to poor illumination and night conditions.
 * **Local Alerts Only**: Alerts are currently local (console + OpenCV HUD banner). Remote alerting (SMS/WhatsApp/Cloud/Siren) is planned for subsequent phases.
 
-These limitations are expected and will be directly solved in **Phase 3 (Custom Dataset & Fine-Tuning)** and **Phase 4 (Tracking & Intelligent Early Warning)**.
+These limitations are tracked for **Phase 4 (Tracking & Intelligent Early Warning)** and future dataset expansion.
 
 ---
 
@@ -242,7 +357,7 @@ These limitations are expected and will be directly solved in **Phase 3 (Custom 
 * [x] Static image detection (`detect.py`)
 * [x] Understand bounding boxes & confidence scores
 
-### Phase 2 — Real-Time Detection (Current)
+### Phase 2 — Real-Time Detection
 * [x] Webcam input integration via OpenCV
 * [x] Real-time YOLO inference pipeline
 * [x] Target class filtering (`TARGET_CLASS = "elephant"`)
@@ -254,13 +369,15 @@ These limitations are expected and will be directly solved in **Phase 3 (Custom 
 * [x] Non-blocking visual alert banner and timestamped terminal alerts
 * [x] Clean shutdown handling with `Q` key
 
-### Phase 3 — Custom Elephant Model (Next)
-* [ ] Collect specialized elephant dataset (wildlife, dense foliage, varying angles)
-* [ ] Annotate images (bounding boxes & posture)
-* [ ] Create train/validation/test splits
-* [ ] Fine-tune YOLO on custom dataset
-* [ ] Benchmark Precision, Recall, and mAP
-* [ ] Reduce false positives in wilderness environments
+### Phase 3 — Custom Elephant Model
+* [x] Dataset preparation
+* [x] Dataset validation
+* [x] Custom dataset
+* [x] Annotation
+* [x] Model training
+* [x] Model evaluation
+* [x] Custom model integration
+* [ ] Model improvement (Asian elephants, infrared/night vision, adverse weather)
 
 ### Phase 4 — Intelligent Tracking & Movement
 * [ ] Multi-object tracking (ByteTrack / BoT-SORT)

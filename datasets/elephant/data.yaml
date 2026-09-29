@@ -1,0 +1,23 @@
+# =============================================================================
+# 🐘 PROJECT ZOGAN — ELEPHANT DETECTION DATASET CONFIGURATION
+# =============================================================================
+# Ultralytics YOLO Dataset Configuration File (Phase 3.1)
+# 
+# This file defines the dataset root, image split directories, class count,
+# and class label mappings for training and evaluating custom YOLO models.
+# =============================================================================
+
+# Dataset root directory (relative to repository root)
+path: datasets/elephant
+
+# Image split directories (relative to 'path')
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 1
+
+# Class ID to name mapping
+names:
+  0: elephant

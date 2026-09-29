@@ -1,0 +1,4145 @@
+{
+  "dataset_name": "Project Zogan Custom Elephant Detection Dataset",
+  "phase": "3.2",
+  "class_id": 0,
+  "class_name": "elephant",
+  "sources": [
+    {
+      "name": "African Wildlife Detection Dataset",
+      "curator": "Ultralytics",
+      "license": "GNU Affero General Public License v3.0 (AGPL-3.0)",
+      "url": "https://docs.ultralytics.com/datasets/detect/african-wildlife",
+      "download_url": "https://github.com/ultralytics/assets/releases/download/v0.0.0/african-wildlife.zip",
+      "notes": "Extracted elephant class (remapped to 0), filtered non-elephant wildlife (buffalo, rhino, zebra) into hard background negatives."
+    }
+  ],
+  "statistics": {
+    "total_images": 456,
+    "positive_images": 382,
+    "negative_images": 74,
+    "total_elephant_boxes": 747,
+    "splits": {
+      "train": {
+        "positive": 271,
+        "negative": 44,
+        "boxes": 557
+      },
+      "val": {
+        "positive": 53,
+        "negative": 15,
+        "boxes": 91
+      },
+      "test": {
+        "positive": 58,
+        "negative": 15,
+        "boxes": 99
+      }
+    }
+  },
+  "files": [
+    {
+      "filename": "elephant_train_0001.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/1 (299).jpg",
+      "width": 512,
+      "height": 358
+    },
+    {
+      "filename": "elephant_train_0002.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (10).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0003.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (101).jpg",
+      "width": 640,
+      "height": 436
+    },
+    {
+      "filename": "elephant_train_0004.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (102).jpg",
+      "width": 493,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0005.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (104).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0006.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (105).jpg",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "filename": "elephant_train_0007.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (106).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0008.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (107).jpg",
+      "width": 478,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0009.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (108).jpg",
+      "width": 435,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0010.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (110).jpg",
+      "width": 640,
+      "height": 481
+    },
+    {
+      "filename": "elephant_train_0011.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (111).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0012.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (112).jpg",
+      "width": 480,
+      "height": 320
+    },
+    {
+      "filename": "elephant_train_0013.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (116).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0014.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (12).jpg",
+      "width": 640,
+      "height": 572
+    },
+    {
+      "filename": "elephant_train_0015.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 14,
+      "original_file": "images/train/2 (121).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0016.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (124).jpg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0017.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (125).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0018.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (126).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0019.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (127).jpg",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "filename": "elephant_train_0020.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (129).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0021.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (13).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0022.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (132).jpg",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0023.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (133).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0024.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (134).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0025.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (135).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0026.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (136).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0027.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (137).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0028.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (139).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0029.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (14).jpg",
+      "width": 640,
+      "height": 506
+    },
+    {
+      "filename": "elephant_train_0030.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (140).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0031.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (141).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0032.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (142).jpg",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "filename": "elephant_train_0033.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (145).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0034.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (146).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0035.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (147).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0036.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (148).jpg",
+      "width": 640,
+      "height": 423
+    },
+    {
+      "filename": "elephant_train_0037.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (149).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0038.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (15).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0039.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (150).jpg",
+      "width": 640,
+      "height": 423
+    },
+    {
+      "filename": "elephant_train_0040.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (151).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0041.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (155).jpg",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "filename": "elephant_train_0042.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (156).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0043.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (157).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0044.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (158).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0045.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (160).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0046.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (161).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0047.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (162).jpg",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "filename": "elephant_train_0048.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (163).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0049.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (164).jpg",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "filename": "elephant_train_0050.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (165).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0051.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (166).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0052.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (167).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0053.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (168).jpg",
+      "width": 500,
+      "height": 335
+    },
+    {
+      "filename": "elephant_train_0054.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (170).jpg",
+      "width": 640,
+      "height": 415
+    },
+    {
+      "filename": "elephant_train_0055.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (173).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0056.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (174).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0057.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (176).jpg",
+      "width": 614,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0058.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (177).jpg",
+      "width": 640,
+      "height": 458
+    },
+    {
+      "filename": "elephant_train_0059.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (178).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0060.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (179).jpg",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "filename": "elephant_train_0061.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (180).jpg",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "filename": "elephant_train_0062.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (183).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0063.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (184).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0064.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (185).jpg",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "filename": "elephant_train_0065.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (186).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0066.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (187).jpg",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "filename": "elephant_train_0067.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (188).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0068.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (189).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0069.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (19).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0070.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (190).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0071.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (191).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0072.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (192).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0073.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (193).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0074.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (194).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0075.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (195).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0076.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (196).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0077.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (199).jpg",
+      "width": 640,
+      "height": 453
+    },
+    {
+      "filename": "elephant_train_0078.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (2).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0079.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (20).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0080.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (200).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0081.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 9,
+      "original_file": "images/train/2 (201).jpg",
+      "width": 640,
+      "height": 512
+    },
+    {
+      "filename": "elephant_train_0082.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (202).jpg",
+      "width": 640,
+      "height": 491
+    },
+    {
+      "filename": "elephant_train_0083.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (203).jpg",
+      "width": 640,
+      "height": 400
+    },
+    {
+      "filename": "elephant_train_0084.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (204).jpg",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "filename": "elephant_train_0085.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (205).jpg",
+      "width": 420,
+      "height": 325
+    },
+    {
+      "filename": "elephant_train_0086.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (206).jpg",
+      "width": 366,
+      "height": 534
+    },
+    {
+      "filename": "elephant_train_0087.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (209).jpg",
+      "width": 425,
+      "height": 280
+    },
+    {
+      "filename": "elephant_train_0088.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (21).jpg",
+      "width": 375,
+      "height": 500
+    },
+    {
+      "filename": "elephant_train_0089.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (211).jpg",
+      "width": 768,
+      "height": 512
+    },
+    {
+      "filename": "elephant_train_0090.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (213).jpg",
+      "width": 381,
+      "height": 255
+    },
+    {
+      "filename": "elephant_train_0091.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (215).jpg",
+      "width": 384,
+      "height": 250
+    },
+    {
+      "filename": "elephant_train_0092.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (217).jpg",
+      "width": 768,
+      "height": 512
+    },
+    {
+      "filename": "elephant_train_0093.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (218).jpg",
+      "width": 500,
+      "height": 299
+    },
+    {
+      "filename": "elephant_train_0094.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (219).jpg",
+      "width": 1199,
+      "height": 869
+    },
+    {
+      "filename": "elephant_train_0095.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (22).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0096.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (220).jpg",
+      "width": 300,
+      "height": 200
+    },
+    {
+      "filename": "elephant_train_0097.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (221).jpg",
+      "width": 482,
+      "height": 280
+    },
+    {
+      "filename": "elephant_train_0098.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (222).jpg",
+      "width": 512,
+      "height": 384
+    },
+    {
+      "filename": "elephant_train_0099.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (223).jpg",
+      "width": 450,
+      "height": 298
+    },
+    {
+      "filename": "elephant_train_0100.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (224).jpg",
+      "width": 1920,
+      "height": 1280
+    },
+    {
+      "filename": "elephant_train_0101.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (225).jpg",
+      "width": 1280,
+      "height": 1920
+    },
+    {
+      "filename": "elephant_train_0102.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (228).jpg",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "filename": "elephant_train_0103.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (229).jpg",
+      "width": 1024,
+      "height": 584
+    },
+    {
+      "filename": "elephant_train_0104.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (230).jpg",
+      "width": 900,
+      "height": 506
+    },
+    {
+      "filename": "elephant_train_0105.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (231).jpg",
+      "width": 590,
+      "height": 332
+    },
+    {
+      "filename": "elephant_train_0106.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (232).jpg",
+      "width": 621,
+      "height": 413
+    },
+    {
+      "filename": "elephant_train_0107.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (235).jpg",
+      "width": 1272,
+      "height": 848
+    },
+    {
+      "filename": "elephant_train_0108.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (236).jpg",
+      "width": 968,
+      "height": 681
+    },
+    {
+      "filename": "elephant_train_0109.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (237).jpg",
+      "width": 800,
+      "height": 449
+    },
+    {
+      "filename": "elephant_train_0110.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (238).jpg",
+      "width": 1920,
+      "height": 1279
+    },
+    {
+      "filename": "elephant_train_0111.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (239).jpg",
+      "width": 768,
+      "height": 500
+    },
+    {
+      "filename": "elephant_train_0112.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (24).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0113.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (240).jpg",
+      "width": 900,
+      "height": 599
+    },
+    {
+      "filename": "elephant_train_0114.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (241).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0115.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (242).jpg",
+      "width": 660,
+      "height": 495
+    },
+    {
+      "filename": "elephant_train_0116.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (244).jpg",
+      "width": 1272,
+      "height": 848
+    },
+    {
+      "filename": "elephant_train_0117.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (245).jpg",
+      "width": 1440,
+      "height": 960
+    },
+    {
+      "filename": "elephant_train_0118.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (247).jpg",
+      "width": 1920,
+      "height": 1039
+    },
+    {
+      "filename": "elephant_train_0119.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (248).jpg",
+      "width": 1919,
+      "height": 1080
+    },
+    {
+      "filename": "elephant_train_0120.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (250).jpg",
+      "width": 512,
+      "height": 341
+    },
+    {
+      "filename": "elephant_train_0121.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (251).jpg",
+      "width": 1600,
+      "height": 1066
+    },
+    {
+      "filename": "elephant_train_0122.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (252).jpg",
+      "width": 960,
+      "height": 720
+    },
+    {
+      "filename": "elephant_train_0123.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (253).jpg",
+      "width": 600,
+      "height": 424
+    },
+    {
+      "filename": "elephant_train_0124.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (254).jpg",
+      "width": 1600,
+      "height": 1044
+    },
+    {
+      "filename": "elephant_train_0125.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (255).jpg",
+      "width": 852,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0126.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (257).jpg",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "filename": "elephant_train_0127.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (258).jpg",
+      "width": 241,
+      "height": 160
+    },
+    {
+      "filename": "elephant_train_0128.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (259).jpg",
+      "width": 960,
+      "height": 540
+    },
+    {
+      "filename": "elephant_train_0129.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (26).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0130.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (260).jpg",
+      "width": 696,
+      "height": 445
+    },
+    {
+      "filename": "elephant_train_0131.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (261).jpg",
+      "width": 835,
+      "height": 557
+    },
+    {
+      "filename": "elephant_train_0132.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (262).jpg",
+      "width": 852,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0133.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (263).jpg",
+      "width": 590,
+      "height": 394
+    },
+    {
+      "filename": "elephant_train_0134.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (265).jpg",
+      "width": 1000,
+      "height": 600
+    },
+    {
+      "filename": "elephant_train_0135.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (266).jpg",
+      "width": 852,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0136.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (267).jpg",
+      "width": 800,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0137.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (27).jpg",
+      "width": 640,
+      "height": 553
+    },
+    {
+      "filename": "elephant_train_0138.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (271).jpg",
+      "width": 1920,
+      "height": 1268
+    },
+    {
+      "filename": "elephant_train_0139.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (272).jpg",
+      "width": 675,
+      "height": 507
+    },
+    {
+      "filename": "elephant_train_0140.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (273).jpg",
+      "width": 1280,
+      "height": 854
+    },
+    {
+      "filename": "elephant_train_0141.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (275).jpg",
+      "width": 700,
+      "height": 467
+    },
+    {
+      "filename": "elephant_train_0142.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (276).jpg",
+      "width": 1356,
+      "height": 668
+    },
+    {
+      "filename": "elephant_train_0143.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (277).jpg",
+      "width": 512,
+      "height": 271
+    },
+    {
+      "filename": "elephant_train_0144.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (278).jpg",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0145.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (280).jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "filename": "elephant_train_0146.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (281).jpg",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "filename": "elephant_train_0147.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (282).jpg",
+      "width": 990,
+      "height": 660
+    },
+    {
+      "filename": "elephant_train_0148.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (283).jpg",
+      "width": 574,
+      "height": 400
+    },
+    {
+      "filename": "elephant_train_0149.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (284).jpg",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0150.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (285).jpg",
+      "width": 1920,
+      "height": 1279
+    },
+    {
+      "filename": "elephant_train_0151.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (287).jpg",
+      "width": 400,
+      "height": 350
+    },
+    {
+      "filename": "elephant_train_0152.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (288).jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "filename": "elephant_train_0153.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (291).jpg",
+      "width": 640,
+      "height": 345
+    },
+    {
+      "filename": "elephant_train_0154.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (292).jpg",
+      "width": 400,
+      "height": 267
+    },
+    {
+      "filename": "elephant_train_0155.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (293).jpg",
+      "width": 750,
+      "height": 422
+    },
+    {
+      "filename": "elephant_train_0156.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (294).jpg",
+      "width": 550,
+      "height": 367
+    },
+    {
+      "filename": "elephant_train_0157.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (295).jpg",
+      "width": 400,
+      "height": 248
+    },
+    {
+      "filename": "elephant_train_0158.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (296).jpg",
+      "width": 550,
+      "height": 320
+    },
+    {
+      "filename": "elephant_train_0159.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (298).jpg",
+      "width": 931,
+      "height": 524
+    },
+    {
+      "filename": "elephant_train_0160.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (299).jpg",
+      "width": 771,
+      "height": 322
+    },
+    {
+      "filename": "elephant_train_0161.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (3).jpg",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "filename": "elephant_train_0162.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (30).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0163.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (300).jpg",
+      "width": 1024,
+      "height": 684
+    },
+    {
+      "filename": "elephant_train_0164.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (301).jpg",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "filename": "elephant_train_0165.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (302).jpg",
+      "width": 1200,
+      "height": 801
+    },
+    {
+      "filename": "elephant_train_0166.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (303).jpg",
+      "width": 594,
+      "height": 397
+    },
+    {
+      "filename": "elephant_train_0167.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (304).jpg",
+      "width": 512,
+      "height": 384
+    },
+    {
+      "filename": "elephant_train_0168.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (305).jpg",
+      "width": 1153,
+      "height": 593
+    },
+    {
+      "filename": "elephant_train_0169.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (307).jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "filename": "elephant_train_0170.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (308).jpg",
+      "width": 1000,
+      "height": 750
+    },
+    {
+      "filename": "elephant_train_0171.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (309).jpg",
+      "width": 1920,
+      "height": 1195
+    },
+    {
+      "filename": "elephant_train_0172.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 7,
+      "original_file": "images/train/2 (31).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0173.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (310).jpg",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "elephant_train_0174.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (313).jpg",
+      "width": 885,
+      "height": 596
+    },
+    {
+      "filename": "elephant_train_0175.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (314).jpg",
+      "width": 1562,
+      "height": 1079
+    },
+    {
+      "filename": "elephant_train_0176.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (315).jpg",
+      "width": 800,
+      "height": 450
+    },
+    {
+      "filename": "elephant_train_0177.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (317).jpg",
+      "width": 852,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0178.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (318).jpg",
+      "width": 590,
+      "height": 367
+    },
+    {
+      "filename": "elephant_train_0179.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (319).jpg",
+      "width": 410,
+      "height": 230
+    },
+    {
+      "filename": "elephant_train_0180.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (32).jpg",
+      "width": 640,
+      "height": 465
+    },
+    {
+      "filename": "elephant_train_0181.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (320).jpg",
+      "width": 800,
+      "height": 549
+    },
+    {
+      "filename": "elephant_train_0182.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (321).jpg",
+      "width": 512,
+      "height": 338
+    },
+    {
+      "filename": "elephant_train_0183.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (322).jpg",
+      "width": 1920,
+      "height": 863
+    },
+    {
+      "filename": "elephant_train_0184.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (324).jpg",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0185.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (325).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0186.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (329).jpg",
+      "width": 1805,
+      "height": 895
+    },
+    {
+      "filename": "elephant_train_0187.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (33).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0188.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (330).jpg",
+      "width": 512,
+      "height": 256
+    },
+    {
+      "filename": "elephant_train_0189.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (334).jpg",
+      "width": 1024,
+      "height": 683
+    },
+    {
+      "filename": "elephant_train_0190.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (335).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0191.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (336).jpg",
+      "width": 1386,
+      "height": 924
+    },
+    {
+      "filename": "elephant_train_0192.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (338).jpg",
+      "width": 1000,
+      "height": 664
+    },
+    {
+      "filename": "elephant_train_0193.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (340).jpg",
+      "width": 715,
+      "height": 477
+    },
+    {
+      "filename": "elephant_train_0194.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (342).jpg",
+      "width": 1642,
+      "height": 940
+    },
+    {
+      "filename": "elephant_train_0195.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (344).jpg",
+      "width": 960,
+      "height": 720
+    },
+    {
+      "filename": "elephant_train_0196.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (346).jpg",
+      "width": 400,
+      "height": 300
+    },
+    {
+      "filename": "elephant_train_0197.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (347).jpg",
+      "width": 1180,
+      "height": 663
+    },
+    {
+      "filename": "elephant_train_0198.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (348).jpg",
+      "width": 1024,
+      "height": 683
+    },
+    {
+      "filename": "elephant_train_0199.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (349).jpg",
+      "width": 1620,
+      "height": 1080
+    },
+    {
+      "filename": "elephant_train_0200.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (35).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0201.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (350).jpg",
+      "width": 1000,
+      "height": 500
+    },
+    {
+      "filename": "elephant_train_0202.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (352).jpg",
+      "width": 512,
+      "height": 342
+    },
+    {
+      "filename": "elephant_train_0203.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (354).jpg",
+      "width": 1920,
+      "height": 1280
+    },
+    {
+      "filename": "elephant_train_0204.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (356).jpg",
+      "width": 1000,
+      "height": 667
+    },
+    {
+      "filename": "elephant_train_0205.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (357).jpg",
+      "width": 600,
+      "height": 376
+    },
+    {
+      "filename": "elephant_train_0206.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (359).jpg",
+      "width": 1024,
+      "height": 597
+    },
+    {
+      "filename": "elephant_train_0207.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (36).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_train_0208.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (360).jpg",
+      "width": 1920,
+      "height": 1433
+    },
+    {
+      "filename": "elephant_train_0209.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (362).jpg",
+      "width": 850,
+      "height": 567
+    },
+    {
+      "filename": "elephant_train_0210.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (363).jpg",
+      "width": 300,
+      "height": 200
+    },
+    {
+      "filename": "elephant_train_0211.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (364).jpg",
+      "width": 512,
+      "height": 336
+    },
+    {
+      "filename": "elephant_train_0212.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (365).jpg",
+      "width": 780,
+      "height": 438
+    },
+    {
+      "filename": "elephant_train_0213.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (367).jpg",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "filename": "elephant_train_0214.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (368).jpg",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "filename": "elephant_train_0215.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (369).jpg",
+      "width": 580,
+      "height": 363
+    },
+    {
+      "filename": "elephant_train_0216.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (37).jpg",
+      "width": 640,
+      "height": 408
+    },
+    {
+      "filename": "elephant_train_0217.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (371).jpg",
+      "width": 512,
+      "height": 341
+    },
+    {
+      "filename": "elephant_train_0218.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (372).jpg",
+      "width": 1000,
+      "height": 667
+    },
+    {
+      "filename": "elephant_train_0219.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (373).jpg",
+      "width": 400,
+      "height": 300
+    },
+    {
+      "filename": "elephant_train_0220.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (375).jpg",
+      "width": 720,
+      "height": 539
+    },
+    {
+      "filename": "elephant_train_0221.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (38).jpg",
+      "width": 640,
+      "height": 417
+    },
+    {
+      "filename": "elephant_train_0222.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (39).jpg",
+      "width": 640,
+      "height": 506
+    },
+    {
+      "filename": "elephant_train_0223.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (4).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0224.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/train/2 (40).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0225.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (41).jpg",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "filename": "elephant_train_0226.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (42).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0227.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (43).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0228.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (44).jpg",
+      "width": 496,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0229.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (45).jpg",
+      "width": 640,
+      "height": 398
+    },
+    {
+      "filename": "elephant_train_0230.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (47).jpg",
+      "width": 333,
+      "height": 500
+    },
+    {
+      "filename": "elephant_train_0231.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (48).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0232.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (5).jpg",
+      "width": 640,
+      "height": 335
+    },
+    {
+      "filename": "elephant_train_0233.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (50).jpg",
+      "width": 640,
+      "height": 483
+    },
+    {
+      "filename": "elephant_train_0234.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (51).jpg",
+      "width": 640,
+      "height": 350
+    },
+    {
+      "filename": "elephant_train_0235.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (52).jpg",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0236.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (54).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0237.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (56).jpg",
+      "width": 424,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0238.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (57).jpg",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0239.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (58).jpg",
+      "width": 585,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0240.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (59).jpg",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "filename": "elephant_train_0241.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (6).jpg",
+      "width": 640,
+      "height": 424
+    },
+    {
+      "filename": "elephant_train_0242.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (60).jpg",
+      "width": 500,
+      "height": 333
+    },
+    {
+      "filename": "elephant_train_0243.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (61).jpg",
+      "width": 524,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0244.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (64).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0245.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (65).jpg",
+      "width": 567,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0246.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (67).jpg",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0247.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (68).jpg",
+      "width": 640,
+      "height": 449
+    },
+    {
+      "filename": "elephant_train_0248.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (69).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0249.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (7).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0250.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (74).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0251.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (75).jpg",
+      "width": 640,
+      "height": 401
+    },
+    {
+      "filename": "elephant_train_0252.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (76).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0253.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (77).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_train_0254.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/train/2 (79).jpg",
+      "width": 640,
+      "height": 346
+    },
+    {
+      "filename": "elephant_train_0255.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (8).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0256.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (80).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0257.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (81).jpg",
+      "width": 576,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0258.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (82).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0259.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 6,
+      "original_file": "images/train/2 (84).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0260.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (86).jpg",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "filename": "elephant_train_0261.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/train/2 (89).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0262.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (9).jpg",
+      "width": 640,
+      "height": 507
+    },
+    {
+      "filename": "elephant_train_0263.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (90).jpg",
+      "width": 640,
+      "height": 629
+    },
+    {
+      "filename": "elephant_train_0264.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (92).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0265.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 8,
+      "original_file": "images/train/2 (93).jpg",
+      "width": 640,
+      "height": 386
+    },
+    {
+      "filename": "elephant_train_0266.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (94).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0267.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/2 (96).jpg",
+      "width": 457,
+      "height": 640
+    },
+    {
+      "filename": "elephant_train_0268.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/train/2 (98).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_train_0269.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/3 (252).jpg",
+      "width": 800,
+      "height": 533
+    },
+    {
+      "filename": "elephant_train_0270.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/4 (334).jpg",
+      "width": 1920,
+      "height": 803
+    },
+    {
+      "filename": "elephant_train_0271.jpg",
+      "split": "train",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/train/4 (335).jpg",
+      "width": 600,
+      "height": 400
+    },
+    {
+      "filename": "background_train_0001.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (10).jpg",
+      "width": 300,
+      "height": 400
+    },
+    {
+      "filename": "background_train_0002.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (118).jpg",
+      "width": 1280,
+      "height": 768
+    },
+    {
+      "filename": "background_train_0003.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (142).jpg",
+      "width": 600,
+      "height": 436
+    },
+    {
+      "filename": "background_train_0004.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (164).jpg",
+      "width": 600,
+      "height": 400
+    },
+    {
+      "filename": "background_train_0005.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (19).jpg",
+      "width": 384,
+      "height": 251
+    },
+    {
+      "filename": "background_train_0006.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (217).jpg",
+      "width": 260,
+      "height": 173
+    },
+    {
+      "filename": "background_train_0007.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (240).jpg",
+      "width": 321,
+      "height": 300
+    },
+    {
+      "filename": "background_train_0008.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (260).jpg",
+      "width": 300,
+      "height": 200
+    },
+    {
+      "filename": "background_train_0009.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (28).jpg",
+      "width": 242,
+      "height": 150
+    },
+    {
+      "filename": "background_train_0010.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (304).jpg",
+      "width": 1024,
+      "height": 683
+    },
+    {
+      "filename": "background_train_0011.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (322).jpg",
+      "width": 800,
+      "height": 518
+    },
+    {
+      "filename": "background_train_0012.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (340).jpg",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "background_train_0013.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (359).jpg",
+      "width": 412,
+      "height": 550
+    },
+    {
+      "filename": "background_train_0014.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (44).jpg",
+      "width": 960,
+      "height": 540
+    },
+    {
+      "filename": "background_train_0015.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (7).jpg",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "filename": "background_train_0016.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/1 (91).jpg",
+      "width": 1824,
+      "height": 1368
+    },
+    {
+      "filename": "background_train_0017.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (109).jpg",
+      "width": 320,
+      "height": 197
+    },
+    {
+      "filename": "background_train_0018.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (131).jpg",
+      "width": 1024,
+      "height": 681
+    },
+    {
+      "filename": "background_train_0019.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (18).jpg",
+      "width": 1080,
+      "height": 675
+    },
+    {
+      "filename": "background_train_0020.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (199).jpg",
+      "width": 320,
+      "height": 213
+    },
+    {
+      "filename": "background_train_0021.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (224).jpg",
+      "width": 634,
+      "height": 424
+    },
+    {
+      "filename": "background_train_0022.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (246).jpg",
+      "width": 1024,
+      "height": 683
+    },
+    {
+      "filename": "background_train_0023.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (27).jpg",
+      "width": 660,
+      "height": 371
+    },
+    {
+      "filename": "background_train_0024.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (29).jpg",
+      "width": 624,
+      "height": 351
+    },
+    {
+      "filename": "background_train_0025.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (307).jpg",
+      "width": 600,
+      "height": 300
+    },
+    {
+      "filename": "background_train_0026.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (33).jpg",
+      "width": 700,
+      "height": 453
+    },
+    {
+      "filename": "background_train_0027.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (35).jpg",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "filename": "background_train_0028.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (368).jpg",
+      "width": 1024,
+      "height": 683
+    },
+    {
+      "filename": "background_train_0029.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (5).jpg",
+      "width": 590,
+      "height": 390
+    },
+    {
+      "filename": "background_train_0030.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/3 (74).jpg",
+      "width": 690,
+      "height": 517
+    },
+    {
+      "filename": "background_train_0031.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (100).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "background_train_0032.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (122).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "background_train_0033.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (144).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "background_train_0034.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (17).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "background_train_0035.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (194).jpg",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "filename": "background_train_0036.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (217).jpg",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "background_train_0037.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (241).jpg",
+      "width": 512,
+      "height": 338
+    },
+    {
+      "filename": "background_train_0038.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (263).jpg",
+      "width": 800,
+      "height": 533
+    },
+    {
+      "filename": "background_train_0039.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (289).jpg",
+      "width": 1000,
+      "height": 519
+    },
+    {
+      "filename": "background_train_0040.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (312).jpg",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "filename": "background_train_0041.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (339).jpg",
+      "width": 512,
+      "height": 384
+    },
+    {
+      "filename": "background_train_0042.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (36).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "background_train_0043.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (42).jpg",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "filename": "background_train_0044.jpg",
+      "split": "train",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/train/4 (61).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_val_0001.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/1 (298).jpg",
+      "width": 800,
+      "height": 504
+    },
+    {
+      "filename": "elephant_val_0002.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (1).jpg",
+      "width": 591,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0003.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/val/2 (103).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_val_0004.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (109).jpg",
+      "width": 640,
+      "height": 512
+    },
+    {
+      "filename": "elephant_val_0005.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (11).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_val_0006.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/val/2 (117).jpg",
+      "width": 640,
+      "height": 422
+    },
+    {
+      "filename": "elephant_val_0007.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (118).jpg",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "filename": "elephant_val_0008.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (128).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0009.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (131).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0010.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (143).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0011.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (153).jpg",
+      "width": 539,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0012.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (159).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_val_0013.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (16).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0014.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (17).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0015.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (171).jpg",
+      "width": 750,
+      "height": 500
+    },
+    {
+      "filename": "elephant_val_0016.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/val/2 (172).jpg",
+      "width": 640,
+      "height": 360
+    },
+    {
+      "filename": "elephant_val_0017.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (18).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0018.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (181).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_val_0019.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (198).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0020.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (207).jpg",
+      "width": 151,
+      "height": 100
+    },
+    {
+      "filename": "elephant_val_0021.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (210).jpg",
+      "width": 425,
+      "height": 272
+    },
+    {
+      "filename": "elephant_val_0022.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (212).jpg",
+      "width": 300,
+      "height": 364
+    },
+    {
+      "filename": "elephant_val_0023.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (23).jpg",
+      "width": 640,
+      "height": 381
+    },
+    {
+      "filename": "elephant_val_0024.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (233).jpg",
+      "width": 1023,
+      "height": 678
+    },
+    {
+      "filename": "elephant_val_0025.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (25).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_val_0026.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (256).jpg",
+      "width": 900,
+      "height": 600
+    },
+    {
+      "filename": "elephant_val_0027.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (264).jpg",
+      "width": 400,
+      "height": 400
+    },
+    {
+      "filename": "elephant_val_0028.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (274).jpg",
+      "width": 1000,
+      "height": 667
+    },
+    {
+      "filename": "elephant_val_0029.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (279).jpg",
+      "width": 480,
+      "height": 253
+    },
+    {
+      "filename": "elephant_val_0030.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/val/2 (28).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0031.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (289).jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "filename": "elephant_val_0032.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (29).jpg",
+      "width": 512,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0033.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/val/2 (297).jpg",
+      "width": 1024,
+      "height": 682
+    },
+    {
+      "filename": "elephant_val_0034.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (311).jpg",
+      "width": 770,
+      "height": 513
+    },
+    {
+      "filename": "elephant_val_0035.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (312).jpg",
+      "width": 960,
+      "height": 641
+    },
+    {
+      "filename": "elephant_val_0036.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (331).jpg",
+      "width": 1000,
+      "height": 667
+    },
+    {
+      "filename": "elephant_val_0037.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (332).jpg",
+      "width": 1424,
+      "height": 895
+    },
+    {
+      "filename": "elephant_val_0038.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (337).jpg",
+      "width": 1920,
+      "height": 1254
+    },
+    {
+      "filename": "elephant_val_0039.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (345).jpg",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "elephant_val_0040.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (351).jpg",
+      "width": 616,
+      "height": 430
+    },
+    {
+      "filename": "elephant_val_0041.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/val/2 (355).jpg",
+      "width": 800,
+      "height": 449
+    },
+    {
+      "filename": "elephant_val_0042.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (358).jpg",
+      "width": 900,
+      "height": 563
+    },
+    {
+      "filename": "elephant_val_0043.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 4,
+      "original_file": "images/val/2 (361).jpg",
+      "width": 870,
+      "height": 500
+    },
+    {
+      "filename": "elephant_val_0044.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/2 (370).jpg",
+      "width": 798,
+      "height": 399
+    },
+    {
+      "filename": "elephant_val_0045.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (46).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0046.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (49).jpg",
+      "width": 425,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0047.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (55).jpg",
+      "width": 640,
+      "height": 521
+    },
+    {
+      "filename": "elephant_val_0048.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 9,
+      "original_file": "images/val/2 (70).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_val_0049.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (87).jpg",
+      "width": 427,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0050.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (88).jpg",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0051.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (91).jpg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "filename": "elephant_val_0052.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/val/2 (99).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_val_0053.jpg",
+      "split": "val",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/val/3 (234).jpg",
+      "width": 1000,
+      "height": 562
+    },
+    {
+      "filename": "background_val_0001.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/1 (1).jpg",
+      "width": 800,
+      "height": 411
+    },
+    {
+      "filename": "background_val_0002.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/1 (159).jpg",
+      "width": 600,
+      "height": 400
+    },
+    {
+      "filename": "background_val_0003.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/1 (208).jpg",
+      "width": 384,
+      "height": 250
+    },
+    {
+      "filename": "background_val_0004.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/1 (264).jpg",
+      "width": 576,
+      "height": 370
+    },
+    {
+      "filename": "background_val_0005.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/1 (357).jpg",
+      "width": 853,
+      "height": 1280
+    },
+    {
+      "filename": "background_val_0006.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/1 (61).jpg",
+      "width": 1163,
+      "height": 1148
+    },
+    {
+      "filename": "background_val_0007.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/3 (134).jpg",
+      "width": 1446,
+      "height": 960
+    },
+    {
+      "filename": "background_val_0008.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/3 (189).jpg",
+      "width": 1200,
+      "height": 670
+    },
+    {
+      "filename": "background_val_0009.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/3 (248).jpg",
+      "width": 1092,
+      "height": 400
+    },
+    {
+      "filename": "background_val_0010.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/3 (338).jpg",
+      "width": 284,
+      "height": 284
+    },
+    {
+      "filename": "background_val_0011.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/3 (75).jpg",
+      "width": 926,
+      "height": 619
+    },
+    {
+      "filename": "background_val_0012.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/4 (143).jpg",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "filename": "background_val_0013.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/4 (197).jpg",
+      "width": 500,
+      "height": 375
+    },
+    {
+      "filename": "background_val_0014.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/4 (285).jpg",
+      "width": 1000,
+      "height": 645
+    },
+    {
+      "filename": "background_val_0015.jpg",
+      "split": "val",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/val/4 (326).jpg",
+      "width": 600,
+      "height": 450
+    },
+    {
+      "filename": "elephant_test_0001.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (100).jpg",
+      "width": 640,
+      "height": 429
+    },
+    {
+      "filename": "elephant_test_0002.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (113).jpg",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "filename": "elephant_test_0003.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (114).jpg",
+      "width": 426,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0004.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (115).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0005.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (119).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0006.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (120).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_test_0007.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (122).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0008.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (123).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0009.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 10,
+      "original_file": "images/test/2 (130).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0010.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (138).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0011.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (144).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_test_0012.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/test/2 (152).jpg",
+      "width": 640,
+      "height": 483
+    },
+    {
+      "filename": "elephant_test_0013.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (154).jpg",
+      "width": 640,
+      "height": 364
+    },
+    {
+      "filename": "elephant_test_0014.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (169).jpg",
+      "width": 424,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0015.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (175).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "elephant_test_0016.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (182).jpg",
+      "width": 500,
+      "height": 357
+    },
+    {
+      "filename": "elephant_test_0017.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (197).jpg",
+      "width": 451,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0018.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (208).jpg",
+      "width": 400,
+      "height": 384
+    },
+    {
+      "filename": "elephant_test_0019.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (214).jpg",
+      "width": 257,
+      "height": 381
+    },
+    {
+      "filename": "elephant_test_0020.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (226).jpg",
+      "width": 1184,
+      "height": 670
+    },
+    {
+      "filename": "elephant_test_0021.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/test/2 (227).jpg",
+      "width": 806,
+      "height": 533
+    },
+    {
+      "filename": "elephant_test_0022.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (234).jpg",
+      "width": 800,
+      "height": 533
+    },
+    {
+      "filename": "elephant_test_0023.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (243).jpg",
+      "width": 1280,
+      "height": 847
+    },
+    {
+      "filename": "elephant_test_0024.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (246).jpg",
+      "width": 992,
+      "height": 558
+    },
+    {
+      "filename": "elephant_test_0025.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (249).jpg",
+      "width": 512,
+      "height": 307
+    },
+    {
+      "filename": "elephant_test_0026.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (268).jpg",
+      "width": 473,
+      "height": 315
+    },
+    {
+      "filename": "elephant_test_0027.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (269).jpg",
+      "width": 400,
+      "height": 300
+    },
+    {
+      "filename": "elephant_test_0028.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (270).jpg",
+      "width": 660,
+      "height": 495
+    },
+    {
+      "filename": "elephant_test_0029.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/test/2 (286).jpg",
+      "width": 341,
+      "height": 227
+    },
+    {
+      "filename": "elephant_test_0030.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (290).jpg",
+      "width": 620,
+      "height": 387
+    },
+    {
+      "filename": "elephant_test_0031.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (306).jpg",
+      "width": 760,
+      "height": 784
+    },
+    {
+      "filename": "elephant_test_0032.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (316).jpg",
+      "width": 410,
+      "height": 230
+    },
+    {
+      "filename": "elephant_test_0033.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 5,
+      "original_file": "images/test/2 (323).jpg",
+      "width": 750,
+      "height": 536
+    },
+    {
+      "filename": "elephant_test_0034.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (326).jpg",
+      "width": 800,
+      "height": 530
+    },
+    {
+      "filename": "elephant_test_0035.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (327).jpg",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0036.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (328).jpg",
+      "width": 627,
+      "height": 417
+    },
+    {
+      "filename": "elephant_test_0037.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (333).jpg",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "filename": "elephant_test_0038.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (339).jpg",
+      "width": 635,
+      "height": 404
+    },
+    {
+      "filename": "elephant_test_0039.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (34).jpg",
+      "width": 640,
+      "height": 478
+    },
+    {
+      "filename": "elephant_test_0040.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (341).jpg",
+      "width": 960,
+      "height": 720
+    },
+    {
+      "filename": "elephant_test_0041.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (343).jpg",
+      "width": 1000,
+      "height": 645
+    },
+    {
+      "filename": "elephant_test_0042.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (353).jpg",
+      "width": 1920,
+      "height": 1279
+    },
+    {
+      "filename": "elephant_test_0043.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (366).jpg",
+      "width": 415,
+      "height": 276
+    },
+    {
+      "filename": "elephant_test_0044.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (374).jpg",
+      "width": 1920,
+      "height": 1440
+    },
+    {
+      "filename": "elephant_test_0045.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (376).jpg",
+      "width": 770,
+      "height": 420
+    },
+    {
+      "filename": "elephant_test_0046.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (53).jpg",
+      "width": 428,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0047.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (62).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0048.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (63).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_test_0049.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (66).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "elephant_test_0050.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/test/2 (71).jpg",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "filename": "elephant_test_0051.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (72).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0052.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (73).jpg",
+      "width": 640,
+      "height": 425
+    },
+    {
+      "filename": "elephant_test_0053.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (78).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0054.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/2 (83).jpg",
+      "width": 640,
+      "height": 415
+    },
+    {
+      "filename": "elephant_test_0055.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (85).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_test_0056.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 2,
+      "original_file": "images/test/2 (95).jpg",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "filename": "elephant_test_0057.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 3,
+      "original_file": "images/test/2 (97).jpg",
+      "width": 640,
+      "height": 426
+    },
+    {
+      "filename": "elephant_test_0058.jpg",
+      "split": "test",
+      "is_positive": true,
+      "boxes_count": 1,
+      "original_file": "images/test/4 (163).jpg",
+      "width": 480,
+      "height": 640
+    },
+    {
+      "filename": "background_test_0001.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/1 (103).jpg",
+      "width": 600,
+      "height": 500
+    },
+    {
+      "filename": "background_test_0002.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/1 (179).jpg",
+      "width": 640,
+      "height": 412
+    },
+    {
+      "filename": "background_test_0003.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/1 (222).jpg",
+      "width": 640,
+      "height": 443
+    },
+    {
+      "filename": "background_test_0004.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/1 (34).jpg",
+      "width": 960,
+      "height": 540
+    },
+    {
+      "filename": "background_test_0005.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/1 (66).jpg",
+      "width": 960,
+      "height": 540
+    },
+    {
+      "filename": "background_test_0006.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/3 (139).jpg",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "filename": "background_test_0007.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/3 (213).jpg",
+      "width": 1500,
+      "height": 1000
+    },
+    {
+      "filename": "background_test_0008.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/3 (271).jpg",
+      "width": 940,
+      "height": 670
+    },
+    {
+      "filename": "background_test_0009.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/3 (351).jpg",
+      "width": 512,
+      "height": 288
+    },
+    {
+      "filename": "background_test_0010.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/3 (8).jpg",
+      "width": 600,
+      "height": 407
+    },
+    {
+      "filename": "background_test_0011.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/4 (132).jpg",
+      "width": 640,
+      "height": 428
+    },
+    {
+      "filename": "background_test_0012.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/4 (19).jpg",
+      "width": 640,
+      "height": 427
+    },
+    {
+      "filename": "background_test_0013.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/4 (226).jpg",
+      "width": 450,
+      "height": 300
+    },
+    {
+      "filename": "background_test_0014.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/4 (270).jpg",
+      "width": 1023,
+      "height": 682
+    },
+    {
+      "filename": "background_test_0015.jpg",
+      "split": "test",
+      "is_positive": false,
+      "boxes_count": 0,
+      "original_file": "images/test/4 (329).jpg",
+      "width": 512,
+      "height": 384
+    }
+  ]
+}

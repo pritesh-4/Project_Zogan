@@ -1,31 +1,72 @@
 """
 =============================================================================
-🐘 ELEPHANT DETECTOR - Real-Time Camera Detection System (Phase 2)
+🐘 ELEPHANT DETECTOR - Real-Time Camera Detection System (Phase 3.4)
 =============================================================================
 
 This module captures live video from a webcam, runs YOLO object detection
-on each frame, filters for elephants exceeding a confidence threshold,
+using our validated custom fine-tuned elephant model (with easy fallback to
+pretrained yolo26n.pt), filters for elephants exceeding a confidence threshold,
 requires persistent detections across multiple frames to eliminate false alarms,
 and triggers rate-limited local alerts with an informative visual HUD.
 
 Usage:
-    python elephant_camera.py
+    python elephant_camera.py                   # Uses validated custom model (default)
+    python elephant_camera.py --pretrained      # Uses pretrained baseline yolo26n.pt
+    python elephant_camera.py --model path/to/model.pt
 
 Controls:
     Press 'Q' or 'q' to quit the application safely.
 =============================================================================
 """
 
+import os
+import sys
 import time
+import argparse
+from pathlib import Path
 import cv2
 from ultralytics import YOLO
+
+# Ensure UTF-8 output on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # =============================================================================
 # ⚙️ CONFIGURATION PARAMETERS
 # =============================================================================
 
-# Path to the pretrained YOLO model weights
-MODEL_PATH = "yolo26n.pt"
+# Model Selection: Set USE_CUSTOM_MODEL = True to use our fine-tuned elephant model,
+# or False to fall back to the general pretrained COCO model.
+USE_CUSTOM_MODEL = True
+
+CUSTOM_MODEL_PATH = "models/elephant_v1/best.pt"
+FALLBACK_CUSTOM_PATH = "runs/detect/elephant_v1/weights/best.pt"
+PRETRAINED_MODEL_PATH = "yolo26n.pt"
+
+
+def resolve_active_model(use_custom: bool = USE_CUSTOM_MODEL, override_path: str = None):
+    """
+    Resolves active model path and human-readable label with clean fallback handling.
+    """
+    if override_path:
+        p = Path(override_path)
+        return str(p), f"Custom ({p.name})"
+
+    if use_custom:
+        if Path(CUSTOM_MODEL_PATH).exists():
+            return CUSTOM_MODEL_PATH, "elephant_v1 (Custom)"
+        elif Path(FALLBACK_CUSTOM_PATH).exists():
+            return FALLBACK_CUSTOM_PATH, "elephant_v1 (Custom)"
+        else:
+            return None, "elephant_v1 (Custom)"
+    
+    return PRETRAINED_MODEL_PATH, "yolo26n (Pretrained)"
+
+
+_active_path, MODEL_NAME = resolve_active_model(USE_CUSTOM_MODEL)
+MODEL_PATH = _active_path or CUSTOM_MODEL_PATH
 
 # Minimum confidence required to accept an elephant detection (70%)
 CONFIDENCE_THRESHOLD = 0.70
@@ -99,12 +140,13 @@ def draw_bounding_box(frame, x1, y1, x2, y2, label, color, is_target=False):
     )
 
 
-def draw_hud(frame, status_text, status_color, detection_count, fps, cooldown_remaining):
+def draw_hud(frame, status_text, status_color, detection_count, fps, cooldown_remaining, model_name=None):
     """
     Draws an informative Heads-Up Display (HUD) overlay at the top of the video frame.
-    Shows current monitoring state, persistence counter, FPS, and cooldown timer.
+    Shows current monitoring state, active model version, persistence counter, FPS, and cooldown timer.
     """
     height, width = frame.shape[:2]
+    active_model_str = model_name or MODEL_NAME
 
     # Create top status bar background
     bar_height = 65
@@ -162,16 +204,29 @@ def draw_hud(frame, status_text, status_color, detection_count, fps, cooldown_re
             cv2.LINE_AA,
         )
 
+    # Draw Model Identifier in top-right HUD
+    model_tag = f"MODEL: {active_model_str}"
+    cv2.putText(
+        frame,
+        model_tag,
+        (max(15, width - 360), 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.55,
+        (0, 255, 255),
+        1,
+        cv2.LINE_AA,
+    )
+
     # Draw FPS in top-right corner
     fps_text = f"FPS: {fps:.1f}"
     cv2.putText(
         frame,
         fps_text,
-        (width - 130, 35),
+        (width - 110, 53),
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.65,
+        0.55,
         (255, 255, 255),
-        2,
+        1,
         cv2.LINE_AA,
     )
 
@@ -199,7 +254,7 @@ def draw_alert_banner(frame):
     cv2.putText(
         frame,
         alert_msg,
-        (text_x, banner_y1 + 37),
+        (text_x, banner_y1 + 38),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.7,
         COLOR_TEXT_WHITE,
@@ -230,32 +285,65 @@ def trigger_alert(max_confidence):
 # 🔍 MAIN DETECTION LOOP
 # =============================================================================
 
-def main():
-    print("=" * 60)
-    print("🐘 Starting Elephant Detection & Early Warning System (Phase 2)")
-    print(f"   Model: {MODEL_PATH}")
-    print(f"   Confidence Threshold: {int(CONFIDENCE_THRESHOLD * 100)}%")
-    print(f"   Required Consecutive Detections: {REQUIRED_DETECTIONS}")
-    print(f"   Alert Cooldown: {ALERT_COOLDOWN_SECONDS} seconds")
-    print("=" * 60)
+def main(use_custom=None, model_override=None, camera_idx=CAMERA_INDEX, conf_thresh=CONFIDENCE_THRESHOLD):
+    # Determine model configuration
+    use_custom_flag = USE_CUSTOM_MODEL if use_custom is None else use_custom
+    model_path, model_label = resolve_active_model(use_custom_flag, model_override)
 
-    # 1. Load the YOLO model
+    # 1. Missing model check (clean error message instead of obscure traceback)
+    if not model_path or not Path(model_path).exists():
+        print("\n" + "=" * 60)
+        print("ERROR: Custom elephant model not found.")
+        print(f"Expected: {CUSTOM_MODEL_PATH} or {FALLBACK_CUSTOM_PATH}")
+        print("Please train the model first (python ai/train.py)")
+        print("or run with pretrained model: python elephant_camera.py --pretrained")
+        print("=" * 60 + "\n")
+        return False
+
+    # 2. Load the YOLO model
     try:
-        print(f"[INFO] Loading YOLO model from '{MODEL_PATH}'...")
-        model = YOLO(MODEL_PATH)
-        print("[INFO] Model loaded successfully.")
+        model = YOLO(model_path)
     except Exception as e:
-        print(f"ERROR: Failed to load YOLO model: {e}")
-        return
+        print(f"\nERROR: Failed to load YOLO model from '{model_path}': {e}")
+        return False
 
-    # 2. Open the webcam
-    print(f"[INFO] Initializing webcam (camera index {CAMERA_INDEX})...")
-    camera = cv2.VideoCapture(CAMERA_INDEX)
+    # 3. Verify target class exists in loaded model
+    model_classes = model.names
+    target_class_found = False
+    target_class_id = None
+    for cid, cname in model_classes.items():
+        if cname.lower() == TARGET_CLASS.lower():
+            target_class_found = True
+            target_class_id = cid
+            break
+
+    if not target_class_found:
+        print("\n" + "=" * 60)
+        print(f"ERROR: The loaded model does not contain a '{TARGET_CLASS}' class.")
+        print(f"Model path: {model_path}")
+        print(f"Available classes: {model_classes}")
+        print("=" * 60 + "\n")
+        return False
+
+    # Print startup banner with actual configuration
+    print("=" * 60)
+    print("🐘 PROJECT ZOGAN — ELEPHANT DETECTION SYSTEM")
+    print(f"Model:                {model_label}")
+    print(f"Weights:              {model_path}")
+    print(f"Target Class:         {TARGET_CLASS} (Class ID: {target_class_id})")
+    print(f"Confidence Threshold: {int(conf_thresh * 100)}%")
+    print(f"Required Detections:  {REQUIRED_DETECTIONS} frames")
+    print(f"Alert Cooldown:       {ALERT_COOLDOWN_SECONDS}s")
+    print("=" * 60)
+
+    # 4. Open the webcam
+    print(f"[INFO] Initializing webcam (camera index {camera_idx})...")
+    camera = cv2.VideoCapture(camera_idx)
 
     if not camera.isOpened():
         print("ERROR: Unable to access webcam.")
         print("Please check that your camera is connected and not used by another application.")
-        return
+        return False
 
     print("[INFO] Camera initialized successfully. Press 'Q' to exit.\n")
 
@@ -294,11 +382,11 @@ def main():
                 for box in result.boxes:
                     class_id = int(box.cls[0])
                     confidence = float(box.conf[0])
-                    class_name = result.names[class_id]
+                    class_name = result.names.get(class_id, f"class_{class_id}")
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                    if class_name == TARGET_CLASS:
-                        if confidence >= CONFIDENCE_THRESHOLD:
+                    if class_name.lower() == TARGET_CLASS.lower():
+                        if confidence >= conf_thresh:
                             # Valid elephant detection meeting confidence threshold
                             elephant_found_in_frame = True
                             max_elephant_confidence = max(max_elephant_confidence, confidence)
@@ -310,7 +398,7 @@ def main():
                             label = f"elephant (low conf): {int(confidence * 100)}%"
                             draw_bounding_box(frame, x1, y1, x2, y2, label, COLOR_WARN_YELLOW, is_target=False)
                     else:
-                        # Other detected objects (person, car, dog, etc.) - display without alerting
+                        # Other detected objects (if using multi-class model)
                         label = f"{class_name}: {int(confidence * 100)}%"
                         draw_bounding_box(frame, x1, y1, x2, y2, label, COLOR_OTHER_OBJ, is_target=False)
 
@@ -337,9 +425,6 @@ def main():
                     trigger_alert(max_elephant_confidence)
                     last_alert_time = current_time
                     alert_banner_until = current_time + ALERT_BANNER_DURATION_SECONDS
-                else:
-                    # Already alerted recently, maintain visual indicator without spamming terminal
-                    pass
 
             # =================================================================
             # 🖥️ DETERMINE VISUAL HUD STATUS
@@ -362,6 +447,7 @@ def main():
                 detection_count=consecutive_elephant_frames,
                 fps=fps,
                 cooldown_remaining=cooldown_remaining,
+                model_name=model_label,
             )
 
             # Draw emergency alert banner if within banner display duration
@@ -388,6 +474,16 @@ def main():
         cv2.destroyAllWindows()
         print("[INFO] Shutdown complete. Goodbye!")
 
+    return True
+
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Real-Time Elephant Detection Camera System")
+    parser.add_argument("--pretrained", action="store_true", help="Force using pretrained yolo26n.pt model")
+    parser.add_argument("--model", type=str, default=None, help="Explicit custom weights path")
+    parser.add_argument("--camera", type=int, default=CAMERA_INDEX, help=f"Camera index (default: {CAMERA_INDEX})")
+    parser.add_argument("--conf", type=float, default=CONFIDENCE_THRESHOLD, help=f"Confidence threshold (default: {CONFIDENCE_THRESHOLD})")
+    args = parser.parse_args()
+
+    use_custom = False if args.pretrained else None
+    main(use_custom=use_custom, model_override=args.model, camera_idx=args.camera, conf_thresh=args.conf)
