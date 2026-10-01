@@ -45,7 +45,7 @@ def run_cmd(cmd_list):
 def test_dataset_counts():
     print("\n--- TEST 1: Dataset File Counts & Proportions ---")
     base = Path("datasets/elephant")
-    
+
     counts = {}
     total_imgs = 0
     total_lbls = 0
@@ -55,15 +55,15 @@ def test_dataset_counts():
     for split in ["train", "val", "test"]:
         img_dir = base / "images" / split
         lbl_dir = base / "labels" / split
-        
+
         imgs = [p for p in img_dir.iterdir() if p.suffix.lower() == ".jpg"]
         lbls = [p for p in lbl_dir.iterdir() if p.suffix.lower() == ".txt"]
-        
+
         assert len(imgs) == len(lbls), f"Mismatch in {split}: {len(imgs)} imgs != {len(lbls)} lbls"
         counts[split] = len(imgs)
         total_imgs += len(imgs)
         total_lbls += len(lbls)
-        
+
         for lbl in lbls:
             content = lbl.read_text(encoding="utf-8").strip()
             if not content:
@@ -71,7 +71,7 @@ def test_dataset_counts():
             else:
                 lines = content.splitlines()
                 total_boxes += len(lines)
-                
+
         print(f"  • {split.upper()}: {len(imgs)} images, {len(lbls)} labels")
 
     print(f"  Total Images: {total_imgs}")
@@ -89,15 +89,15 @@ def test_dataset_counts():
 def test_no_data_leakage():
     print("\n--- TEST 2: Data Leakage Verification ---")
     base = Path("datasets/elephant")
-    
+
     train_stems = set(p.stem for p in (base / "images" / "train").glob("*.jpg"))
     val_stems = set(p.stem for p in (base / "images" / "val").glob("*.jpg"))
     test_stems = set(p.stem for p in (base / "images" / "test").glob("*.jpg"))
-    
+
     train_val_overlap = train_stems.intersection(val_stems)
     train_test_overlap = train_stems.intersection(test_stems)
     val_test_overlap = val_stems.intersection(test_stems)
-    
+
     assert len(train_val_overlap) == 0, f"Data leakage between train and val: {train_val_overlap}"
     assert len(train_test_overlap) == 0, f"Data leakage between train and test: {train_test_overlap}"
     assert len(val_test_overlap) == 0, f"Data leakage between val and test: {val_test_overlap}"
@@ -107,7 +107,7 @@ def test_no_data_leakage():
 def test_image_decoding():
     print("\n--- TEST 3: Image Decode Verification ---")
     base = Path("datasets/elephant")
-    
+
     for split in ["train", "val", "test"]:
         imgs = list((base / "images" / split).glob("*.jpg"))
         # Test first 10 images from each split
@@ -122,7 +122,7 @@ def test_image_decoding():
 def test_label_syntax_and_classes():
     print("\n--- TEST 4: YOLO Label Syntax and Coordinate Bounds ---")
     base = Path("datasets/elephant")
-    
+
     for split in ["train", "val", "test"]:
         lbl_dir = base / "labels" / split
         for lbl_path in lbl_dir.glob("*.txt"):
@@ -134,7 +134,12 @@ def test_label_syntax_and_classes():
                 assert len(tokens) == 5, f"Malformed line in {lbl_path}:{idx} -> {line}"
                 class_id = int(tokens[0])
                 assert class_id == 0, f"Class ID must be 0 (elephant), got {class_id} in {lbl_path}:{idx}"
-                xc, yc, w, h = float(tokens[1]), float(tokens[2]), float(tokens[3]), float(tokens[4])
+                xc, yc, w, h = (
+                    float(tokens[1]),
+                    float(tokens[2]),
+                    float(tokens[3]),
+                    float(tokens[4]),
+                )
                 assert 0.0 <= xc <= 1.0, f"Invalid xc in {lbl_path}:{idx}: {xc}"
                 assert 0.0 <= yc <= 1.0, f"Invalid yc in {lbl_path}:{idx}: {yc}"
                 assert 0.0 < w <= 1.0, f"Invalid w in {lbl_path}:{idx}: {w}"
@@ -146,10 +151,10 @@ def test_metadata_manifest():
     print("\n--- TEST 5: Dataset Metadata Manifest ---")
     meta_path = Path("datasets/elephant/metadata.json")
     assert meta_path.exists(), "Missing datasets/elephant/metadata.json"
-    
+
     with open(meta_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
-        
+
     assert meta["class_id"] == 0
     assert meta["class_name"] == "elephant"
     assert "sources" in meta and len(meta["sources"]) > 0

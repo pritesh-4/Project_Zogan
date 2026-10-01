@@ -6,7 +6,6 @@ results = model("elephant.jpg")
 
 for result in results:
     for box in result.boxes:
-
         class_id = int(box.cls[0])
         confidence = float(box.conf[0])
 

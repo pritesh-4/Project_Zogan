@@ -54,7 +54,7 @@ def test_custom_model_weights():
     print("\n--- TEST 1: Model Checkpoint Existence ---")
     custom_weights = Path("models/elephant_v1/best.pt")
     runs_weights = Path("runs/detect/elephant_v1/weights/best.pt")
-    
+
     assert custom_weights.exists() or runs_weights.exists(), (
         f"Missing custom model weights! Checked {custom_weights} and {runs_weights}"
     )
@@ -66,7 +66,7 @@ def test_model_class_mapping():
     print("\n--- TEST 2: Model Class Mapping Verification ---")
     weights_path, _ = ec.resolve_active_model(use_custom=True)
     model = YOLO(weights_path)
-    
+
     names = model.names
     print(f"  Model classes: {names}")
     assert 0 in names or "0" in names, "Model must have class 0"
@@ -118,10 +118,10 @@ def test_live_detection_pipeline_with_custom_model():
     print("\n--- TEST 7: Detection Pipeline with Custom Model ---")
     weights_path, model_label = ec.resolve_active_model(use_custom=True)
     model = YOLO(weights_path)
-    
+
     img = cv2.imread("elephant.jpg")
     assert img is not None, "Failed to load elephant.jpg"
-    
+
     # 1. Detection on elephant image
     results = model(img, verbose=False)
     elephant_detected = False
@@ -135,7 +135,9 @@ def test_live_detection_pipeline_with_custom_model():
                 detected_conf = conf
 
     assert elephant_detected, "Custom model failed to detect elephant in elephant.jpg!"
-    print(f"  ✓ Custom model detected elephant with {detected_conf * 100:.1f}% confidence (cutoff {ec.CONFIDENCE_THRESHOLD * 100:.0f}%)")
+    print(
+        f"  ✓ Custom model detected elephant with {detected_conf * 100:.1f}% confidence (cutoff {ec.CONFIDENCE_THRESHOLD * 100:.0f}%)"
+    )
 
     # 2. Persistence and cooldown simulation
     consecutive_frames = 0
@@ -180,7 +182,15 @@ def test_live_detection_pipeline_with_custom_model():
 
     # 4. HUD rendering with model name tag
     test_frame = img.copy()
-    ec.draw_hud(test_frame, "ELEPHANT CONFIRMED", ec.COLOR_ALERT_RED, 5, 30.0, 25.0, model_name=model_label)
+    ec.draw_hud(
+        test_frame,
+        "ELEPHANT CONFIRMED",
+        ec.COLOR_ALERT_RED,
+        5,
+        30.0,
+        25.0,
+        model_name=model_label,
+    )
     ec.draw_alert_banner(test_frame)
     cv2.imwrite("test_phase3_4_hud_preview.jpg", test_frame)
     print("  ✓ Visual HUD with model identifier verified. Saved test_phase3_4_hud_preview.jpg")

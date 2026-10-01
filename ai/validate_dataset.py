@@ -21,11 +21,10 @@ Exit Codes:
 =============================================================================
 """
 
-import os
 import sys
 import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Any
 
 # Ensure terminal handles UTF-8 safely on Windows
 if hasattr(sys.stdout, "reconfigure"):
@@ -173,9 +172,7 @@ class DatasetValidator:
                     else:
                         image_files[stem] = p
                 else:
-                    self.log_warning(
-                        f"Skipping unsupported image extension: {p.relative_to(self.dataset_root)}"
-                    )
+                    self.log_warning(f"Skipping unsupported image extension: {p.relative_to(self.dataset_root)}")
 
         # Collect label files
         label_files: Dict[str, Path] = {}
@@ -184,9 +181,7 @@ class DatasetValidator:
                 if p.suffix.lower() == ".txt":
                     label_files[p.stem] = p
                 else:
-                    self.log_warning(
-                        f"Non-text file found in labels folder: {p.relative_to(self.dataset_root)}"
-                    )
+                    self.log_warning(f"Non-text file found in labels folder: {p.relative_to(self.dataset_root)}")
 
         self.split_image_counts[split] = len(image_files)
         self.split_label_counts[split] = len(label_files)
@@ -205,12 +200,10 @@ class DatasetValidator:
         for stem, lbl_path in label_files.items():
             if stem not in image_files:
                 self.orphaned_label_files += 1
-                self.log_error(
-                    f"Orphaned label file (no matching image): '{lbl_path.relative_to(self.dataset_root)}'"
-                )
+                self.log_error(f"Orphaned label file (no matching image): '{lbl_path.relative_to(self.dataset_root)}'")
 
         # 3. Validate contents of each label file that has a corresponding image
-        max_class_id = (self.config.get("nc", 1) - 1)
+        max_class_id = self.config.get("nc", 1) - 1
 
         for stem, lbl_path in label_files.items():
             if stem not in image_files:
@@ -255,9 +248,7 @@ class DatasetValidator:
                     class_id = int(tokens[0])
                 except ValueError:
                     self.invalid_annotations += 1
-                    self.log_error(
-                        f"Invalid non-integer class_id '{tokens[0]}' in '{rel_lbl}' (line {line_idx})"
-                    )
+                    self.log_error(f"Invalid non-integer class_id '{tokens[0]}' in '{rel_lbl}' (line {line_idx})")
                     continue
 
                 if class_id < 0 or class_id > max_class_id:
@@ -275,9 +266,7 @@ class DatasetValidator:
                     h = float(tokens[4])
                 except ValueError:
                     self.invalid_annotations += 1
-                    self.log_error(
-                        f"Non-numeric coordinates in '{rel_lbl}' (line {line_idx}) -> '{line}'"
-                    )
+                    self.log_error(f"Non-numeric coordinates in '{rel_lbl}' (line {line_idx}) -> '{line}'")
                     continue
 
                 # Check coordinates within valid range [0, 1]
@@ -293,9 +282,7 @@ class DatasetValidator:
 
                 if coord_errors:
                     self.invalid_annotations += 1
-                    self.log_error(
-                        f"Invalid coordinates in '{rel_lbl}' (line {line_idx}): {', '.join(coord_errors)}"
-                    )
+                    self.log_error(f"Invalid coordinates in '{rel_lbl}' (line {line_idx}): {', '.join(coord_errors)}")
                     continue
 
                 # Check bounding box bounds
@@ -351,11 +338,7 @@ class DatasetValidator:
         total_boxes = sum(self.split_box_counts.values())
 
         annotated_images_boxes = [b for b in self.boxes_per_image if b > 0]
-        avg_boxes = (
-            sum(annotated_images_boxes) / len(annotated_images_boxes)
-            if annotated_images_boxes
-            else 0.0
-        )
+        avg_boxes = sum(annotated_images_boxes) / len(annotated_images_boxes) if annotated_images_boxes else 0.0
         min_boxes = min(annotated_images_boxes) if annotated_images_boxes else 0
         max_boxes = max(annotated_images_boxes) if annotated_images_boxes else 0
 
@@ -409,9 +392,7 @@ class DatasetValidator:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Validate a YOLO object detection dataset structure and annotations."
-    )
+    parser = argparse.ArgumentParser(description="Validate a YOLO object detection dataset structure and annotations.")
     parser.add_argument(
         "--data",
         type=str,

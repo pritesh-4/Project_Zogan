@@ -7,8 +7,6 @@ Test script for verifying Phase 2 Elephant Detector logic:
 - HUD and bounding box rendering
 """
 
-import os
-import sys
 import time
 import cv2
 import numpy as np
@@ -16,6 +14,7 @@ from ultralytics import YOLO
 
 # Import functions and constants from elephant_camera
 import elephant_camera as ec
+
 
 def test_pipeline():
     print("=== TEST 1: Model Loading ===")
@@ -26,7 +25,7 @@ def test_pipeline():
     print("\n=== TEST 2: Detection on elephant.jpg ===")
     img = cv2.imread("elephant.jpg")
     assert img is not None, "Failed to load elephant.jpg"
-    
+
     results = model(img, verbose=False)
     elephant_detected = False
     detected_conf = 0.0
@@ -73,7 +72,7 @@ def test_pipeline():
     # Simulate blank frame (no elephant)
     blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
     blank_results = model(blank_frame, verbose=False)
-    
+
     elephant_in_blank = False
     for r in blank_results:
         for b in r.boxes:
@@ -84,21 +83,31 @@ def test_pipeline():
 
     if not elephant_in_blank:
         consecutive_frames = 0
-    
+
     assert consecutive_frames == 0, "Counter did not reset on missing elephant!"
     print("✓ Detection counter correctly reset to 0 when elephant disappeared.")
 
     print("\n=== TEST 5: HUD and Drawing Functions ===")
     test_frame = img.copy()
-    ec.draw_bounding_box(test_frame, 50, 100, 300, 400, "ELEPHANT: 96%", ec.COLOR_ALERT_RED, is_target=True)
+    ec.draw_bounding_box(
+        test_frame,
+        50,
+        100,
+        300,
+        400,
+        "ELEPHANT: 96%",
+        ec.COLOR_ALERT_RED,
+        is_target=True,
+    )
     ec.draw_hud(test_frame, "ELEPHANT CONFIRMED", ec.COLOR_ALERT_RED, 5, 25.4, 28.0)
     ec.draw_alert_banner(test_frame)
-    
+
     assert test_frame.shape == img.shape, "Frame shape altered incorrectly"
     cv2.imwrite("test_output_annotated.jpg", test_frame)
     print("✓ HUD and bounding box rendering verified. Saved test_output_annotated.jpg")
 
     print("\n=== ALL TESTS PASSED SUCCESSFULLY! ===")
+
 
 if __name__ == "__main__":
     test_pipeline()

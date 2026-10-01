@@ -23,7 +23,6 @@ Usage:
 =============================================================================
 """
 
-import os
 import sys
 import shutil
 import tempfile
@@ -216,14 +215,16 @@ def test_visualizer():
         cv2.imwrite(str(img_path), dummy_img)
         lbl_path.write_text("0 0.500 0.500 0.400 0.600\n", encoding="utf-8")
 
-        code, stdout, stderr = run_cmd([
-            sys.executable,
-            "ai/visualize_dataset.py",
-            str(img_path),
-            "--save",
-            str(out_path),
-            "--no-show",
-        ])
+        code, stdout, stderr = run_cmd(
+            [
+                sys.executable,
+                "ai/visualize_dataset.py",
+                str(img_path),
+                "--save",
+                str(out_path),
+                "--no-show",
+            ]
+        )
         assert code == 0, f"Visualizer exited with error: {stderr}\n{stdout}"
         assert out_path.exists(), f"Visualizer did not generate output at {out_path}"
         print(f"  ✓ Visualizer generated annotated image: {out_path}")

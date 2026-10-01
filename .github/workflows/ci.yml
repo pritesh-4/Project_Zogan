@@ -1,0 +1,94 @@
+name: Project Zogan CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Code Quality & Test Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install system dependencies (OpenCV headless)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+
+      - name: Validate Python syntax
+        run: |
+          python -m compileall -q -x "venv|\.venv" .
+
+      - name: Verify core imports and environment
+        run: |
+          python -c "import torch, cv2, ultralytics, yaml, lap; print('Core dependencies imported successfully!')"
+
+      - name: Run linter (Ruff)
+        run: |
+          ruff check .
+
+      - name: Check code formatting (Ruff)
+        run: |
+          ruff format --check .
+
+      - name: Verify no tracked secrets
+        run: |
+          git ls-files | grep -E "(\.env|\.pem|\.key|credentials\.json)$" && { echo "ERROR: Secret file found tracked in repository!"; exit 1; } || echo "No secret files tracked."
+
+      - name: Validate dataset integrity and configuration
+        run: |
+          python ai/validate_dataset.py
+
+      - name: Run Phase 2 tests (Persistence & Alerting)
+        run: |
+          python test_phase2.py
+
+      - name: Run Phase 3.1 tests (Dataset Architecture & Validator)
+        run: |
+          python test_phase3_1.py
+
+      - name: Run Phase 3.2 tests (Dataset Integrity & Split Validation)
+        run: |
+          python test_phase3_2.py
+
+      - name: Run Phase 3.4 tests (Custom Model Detection & Pipeline)
+        run: |
+          python test_phase3_4.py
+
+      - name: Run Phase 4 tests (Object Tracking & Movement Analysis)
+        run: |
+          python test_phase4.py
+
+      - name: Run Phase 5 tests (Geofencing & Risk Engine)
+        run: |
+          python test_phase5.py
+
+      - name: Run Risk Simulation scenario
+        run: |
+          python ai/simulate_risk.py

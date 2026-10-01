@@ -1,0 +1,35 @@
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+exclude = [
+    ".git",
+    ".github",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "venv",
+    ".venv",
+    "runs",
+]
+
+[tool.ruff.lint]
+# Practical, high-value code quality checks:
+# E4, E7, E9: Syntax errors, basic runtime errors, and undefined names
+# F: Pyflakes (catches undefined variables, unused imports, duplicate keys, etc.)
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+]
+
+ignore = [
+    "E501",  # Line length handled by formatter
+    "W293",  # Whitespace on blank lines
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

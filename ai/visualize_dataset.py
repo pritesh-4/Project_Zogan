@@ -16,7 +16,6 @@ Controls:
 =============================================================================
 """
 
-import os
 import sys
 import argparse
 from pathlib import Path
@@ -38,10 +37,10 @@ except ImportError:
 DEFAULT_CLASS_NAMES = {0: "elephant"}
 
 # Bounding box color palette (BGR format for OpenCV)
-BOX_COLOR = (0, 255, 0)         # Vibrant green for elephant box
-BADGE_BG_COLOR = (0, 200, 0)    # Green label tag background
-TEXT_COLOR = (0, 0, 0)          # Black text on label badge
-INFO_COLOR = (255, 255, 255)    # White text for overlay info
+BOX_COLOR = (0, 255, 0)  # Vibrant green for elephant box
+BADGE_BG_COLOR = (0, 200, 0)  # Green label tag background
+TEXT_COLOR = (0, 0, 0)  # Black text on label badge
+INFO_COLOR = (255, 255, 255)  # White text for overlay info
 
 
 def find_label_path(image_path: Path) -> Path:
@@ -50,7 +49,7 @@ def find_label_path(image_path: Path) -> Path:
     Looks in sibling 'labels' directory first, then alongside the image.
     """
     parts = list(image_path.parts)
-    
+
     # Check if 'images' is in path and replace with 'labels'
     if "images" in parts:
         label_parts = list(parts)
@@ -71,7 +70,7 @@ def find_label_path(image_path: Path) -> Path:
         idx = label_parts.index("images")
         label_parts[idx] = "labels"
         return Path(*label_parts).with_suffix(".txt")
-    
+
     return image_path.with_suffix(".txt")
 
 
@@ -116,7 +115,7 @@ def visualize_image(image_path_str: str, save_path_str: str = None, show_window:
     else:
         # Read and parse YOLO annotations
         with open(label_path, "r", encoding="utf-8") as f:
-            lines = [l.strip() for l in f.readlines() if l.strip()]
+            lines = [ln.strip() for ln in f.readlines() if ln.strip()]
 
         if len(lines) == 0:
             print("[INFO] Background Sample: Label file is empty (0 bounding boxes).")
@@ -169,7 +168,13 @@ def visualize_image(image_path_str: str, save_path_str: str = None, show_window:
                 )
 
                 # Draw bounding box rectangle
-                cv2.rectangle(frame, (x1_clamped, y1_clamped), (x2_clamped, y2_clamped), BOX_COLOR, 3)
+                cv2.rectangle(
+                    frame,
+                    (x1_clamped, y1_clamped),
+                    (x2_clamped, y2_clamped),
+                    BOX_COLOR,
+                    3,
+                )
 
                 # Prepare label tag text
                 label_text = f"#{idx} {class_name}"
@@ -221,9 +226,7 @@ def visualize_image(image_path_str: str, save_path_str: str = None, show_window:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Visualize YOLO bounding box annotations on a dataset image."
-    )
+    parser = argparse.ArgumentParser(description="Visualize YOLO bounding box annotations on a dataset image.")
     parser.add_argument(
         "image",
         type=str,

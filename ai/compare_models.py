@@ -50,9 +50,7 @@ def resolve_custom_model(explicit_path: str = None) -> Path:
     for p in CUSTOM_PATHS:
         if p.exists():
             return p
-    raise FileNotFoundError(
-        "No custom elephant model found! Expected models/elephant_v1/best.pt"
-    )
+    raise FileNotFoundError("No custom elephant model found! Expected models/elephant_v1/best.pt")
 
 
 def run_inference(model, image_path: Path, conf_threshold: float = 0.50):
@@ -144,7 +142,9 @@ def compare_models(
     if orig_dets and cust_dets:
         top_orig = max(d["conf"] for d in orig_dets)
         top_cust = max(d["conf"] for d in cust_dets)
-        print(f"Summary: Baseline top confidence = {top_orig * 100:.1f}% vs Custom top confidence = {top_cust * 100:.1f}%")
+        print(
+            f"Summary: Baseline top confidence = {top_orig * 100:.1f}% vs Custom top confidence = {top_cust * 100:.1f}%"
+        )
     elif cust_dets and not orig_dets:
         print("Summary: Custom model detected elephant where baseline missed it.")
     elif orig_dets and not cust_dets:
@@ -164,8 +164,24 @@ def compare_models(
         p2 = cv2.resize(cust_plot, (target_w, target_h))
 
         # Add title headers
-        cv2.putText(p1, "Baseline: yolo26n.pt", (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-        cv2.putText(p2, "Custom: elephant_v1", (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        cv2.putText(
+            p1,
+            "Baseline: yolo26n.pt",
+            (20, 35),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 255),
+            2,
+        )
+        cv2.putText(
+            p2,
+            "Custom: elephant_v1",
+            (20, 35),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 0),
+            2,
+        )
 
         side_by_side = np.hstack([p1, p2])
 
@@ -189,7 +205,12 @@ def main():
     parser = argparse.ArgumentParser(description="Compare original pretrained YOLO with custom elephant model.")
     parser.add_argument("image", type=str, help="Image path to evaluate")
     parser.add_argument("--custom", type=str, default=None, help="Path to custom model weights")
-    parser.add_argument("--baseline", type=str, default=str(PRETRAINED_PATH), help="Path to baseline pretrained model")
+    parser.add_argument(
+        "--baseline",
+        type=str,
+        default=str(PRETRAINED_PATH),
+        help="Path to baseline pretrained model",
+    )
     parser.add_argument("--conf", type=float, default=0.50, help="Confidence cutoff threshold")
     parser.add_argument("--save", type=str, default=None, help="Save path for comparison image")
     parser.add_argument("--no-show", action="store_true", help="Do not open GUI display window")

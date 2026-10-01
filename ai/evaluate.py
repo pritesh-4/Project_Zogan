@@ -16,7 +16,6 @@ Usage:
 =============================================================================
 """
 
-import os
 import sys
 import argparse
 from pathlib import Path
@@ -92,7 +91,7 @@ def evaluate_model(
         output_predictions_dir = weights_path.parent.parent / "test_predictions"
     output_predictions_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"[3/4] Generating visual predictions on unseen test images...")
+    print("[3/4] Generating visual predictions on unseen test images...")
     test_images_dir = data_path.parent / "images" / "test"
     test_imgs = list(test_images_dir.glob("*.jpg"))
     print(f"      Processing {len(test_imgs)} test images into: {output_predictions_dir}")
@@ -112,7 +111,11 @@ def evaluate_model(
             cv2.imwrite(str(out_file), annotated)
 
     # 4. Compare with Baseline Pretrained Model (yolo26n.pt) on Test Set
-    baseline_stats = {"model": str(baseline_path), "detected_images": 0, "total_boxes": 0}
+    baseline_stats = {
+        "model": str(baseline_path),
+        "detected_images": 0,
+        "total_boxes": 0,
+    }
     if baseline_path.exists():
         print(f"[4/4] Comparing against baseline pretrained model ({baseline_path})...")
         base_model = YOLO(str(baseline_path))
@@ -150,8 +153,12 @@ def evaluate_model(
     if baseline_path.exists():
         print("")
         print("BASELINE COMPARISON (Held-out test set):")
-        print(f"  • Pretrained yolo26n.pt (COCO):  {baseline_stats['total_boxes']} elephant detections across {baseline_stats['detected_images']} images")
-        print(f"  • Custom fine-tuned (elephant_v1): {total_test_detections} elephant detections across {test_images_with_detections} images")
+        print(
+            f"  • Pretrained yolo26n.pt (COCO):  {baseline_stats['total_boxes']} elephant detections across {baseline_stats['detected_images']} images"
+        )
+        print(
+            f"  • Custom fine-tuned (elephant_v1): {total_test_detections} elephant detections across {test_images_with_detections} images"
+        )
     print("=" * 60)
 
     # 5. Generate MODEL_REPORT.md
@@ -173,7 +180,12 @@ def evaluate_model(
 
     return {
         "val_metrics": {"p": val_p, "r": val_r, "map50": val_map50, "map": val_map},
-        "test_metrics": {"p": test_p, "r": test_r, "map50": test_map50, "map": test_map},
+        "test_metrics": {
+            "p": test_p,
+            "r": test_r,
+            "map50": test_map50,
+            "map": test_map,
+        },
         "test_predictions_dir": str(output_predictions_dir),
         "report_path": str(report_path),
     }
@@ -193,8 +205,8 @@ def generate_model_report(
 
     content = f"""# 🐘 Project Zogan — Model Evaluation Report
 ### Experiment: `elephant_v1`
-**Evaluation Date**: {timestamp}  
-**Model Checkpoint**: `{weights_path}`  
+**Evaluation Date**: {timestamp}
+**Model Checkpoint**: `{weights_path}`
 **Dataset Configuration**: `{data_path}`
 
 ---
@@ -222,18 +234,18 @@ def generate_model_report(
 ### Validation Split Results
 | Metric | Value | Percentage |
 | :--- | :---: | :---: |
-| **Precision (P)** | `{val_metrics['p']:.4f}` | **{val_metrics['p'] * 100:.1f}%** |
-| **Recall (R)** | `{val_metrics['r']:.4f}` | **{val_metrics['r'] * 100:.1f}%** |
-| **mAP@50** | `{val_metrics['map50']:.4f}` | **{val_metrics['map50'] * 100:.1f}%** |
-| **mAP@50-95** | `{val_metrics['map']:.4f}` | **{val_metrics['map'] * 100:.1f}%** |
+| **Precision (P)** | `{val_metrics["p"]:.4f}` | **{val_metrics["p"] * 100:.1f}%** |
+| **Recall (R)** | `{val_metrics["r"]:.4f}` | **{val_metrics["r"] * 100:.1f}%** |
+| **mAP@50** | `{val_metrics["map50"]:.4f}` | **{val_metrics["map50"] * 100:.1f}%** |
+| **mAP@50-95** | `{val_metrics["map"]:.4f}` | **{val_metrics["map"] * 100:.1f}%** |
 
 ### Unseen Test Split Results (Strict Hold-Out)
 | Metric | Value | Percentage |
 | :--- | :---: | :---: |
-| **Precision (P)** | `{test_metrics['p']:.4f}` | **{test_metrics['p'] * 100:.1f}%** |
-| **Recall (R)** | `{test_metrics['r']:.4f}` | **{test_metrics['r'] * 100:.1f}%** |
-| **mAP@50** | `{test_metrics['map50']:.4f}` | **{test_metrics['map50'] * 100:.1f}%** |
-| **mAP@50-95** | `{test_metrics['map']:.4f}` | **{test_metrics['map'] * 100:.1f}%** |
+| **Precision (P)** | `{test_metrics["p"]:.4f}` | **{test_metrics["p"] * 100:.1f}%** |
+| **Recall (R)** | `{test_metrics["r"]:.4f}` | **{test_metrics["r"] * 100:.1f}%** |
+| **mAP@50** | `{test_metrics["map50"]:.4f}` | **{test_metrics["map50"] * 100:.1f}%** |
+| **mAP@50-95** | `{test_metrics["map"]:.4f}` | **{test_metrics["map"] * 100:.1f}%** |
 
 ---
 
@@ -242,8 +254,8 @@ def generate_model_report(
 | Metric / Aspect | Baseline `yolo26n.pt` (Pretrained COCO) | Custom `elephant_v1` (Fine-Tuned) |
 | :--- | :---: | :---: |
 | **Target Classes** | 80 generic classes | 1 dedicated class (`elephant`) |
-| **Elephant Detections on Test Set** | {baseline_stats.get('total_boxes', 'N/A')} boxes | **{test_stats['total_boxes']} boxes** |
-| **Images with Detections** | {baseline_stats.get('detected_images', 'N/A')} / {test_stats['total_images']} | **{test_stats['detected_images']} / {test_stats['total_images']}** |
+| **Elephant Detections on Test Set** | {baseline_stats.get("total_boxes", "N/A")} boxes | **{test_stats["total_boxes"]} boxes** |
+| **Images with Detections** | {baseline_stats.get("detected_images", "N/A")} / {test_stats["total_images"]} | **{test_stats["detected_images"]} / {test_stats["total_images"]}** |
 | **Hard Negative Handling** | Can confuse other quadrupeds | Trained on 74 negative wildlife scenes |
 
 ---
@@ -257,7 +269,7 @@ Inspection of predictions in `runs/detect/elephant_v1/test_predictions/`:
 ---
 
 ## 6. Overfitting Analysis
-* The gap between validation mAP50 ({val_metrics['map50'] * 100:.1f}%) and test mAP50 ({test_metrics['map50'] * 100:.1f}%) is minimal and healthy.
+* The gap between validation mAP50 ({val_metrics["map50"] * 100:.1f}%) and test mAP50 ({test_metrics["map50"] * 100:.1f}%) is minimal and healthy.
 * The model generalizes effectively to unseen test images without memorizing training samples.
 
 ---
@@ -272,9 +284,7 @@ Inspection of predictions in `runs/detect/elephant_v1/test_predictions/`:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Evaluate custom trained elephant detection YOLO model."
-    )
+    parser = argparse.ArgumentParser(description="Evaluate custom trained elephant detection YOLO model.")
     parser.add_argument(
         "--weights",
         type=str,

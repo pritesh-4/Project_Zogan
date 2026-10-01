@@ -21,7 +21,6 @@ Usage:
 =============================================================================
 """
 
-import os
 import sys
 import time
 import shutil
@@ -48,9 +47,9 @@ from validate_dataset import DatasetValidator
 
 MODEL_PATH = "yolo26n.pt"
 DATASET_PATH = "datasets/elephant/data.yaml"
-EPOCHS = 15                 # Transfer learning converges rapidly from pretrained weights
-IMAGE_SIZE = 416            # High-throughput resolution for CPU/Edge; use 640 for GPU
-BATCH_SIZE = 16             # Appropriate batch size for stability
+EPOCHS = 15  # Transfer learning converges rapidly from pretrained weights
+IMAGE_SIZE = 416  # High-throughput resolution for CPU/Edge; use 640 for GPU
+BATCH_SIZE = 16  # Appropriate batch size for stability
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 PROJECT_DIR = "runs/detect"
 EXPERIMENT_NAME = "elephant_v1"
@@ -111,7 +110,11 @@ def train_custom_model(
     print(f"Epochs:           {epochs}")
     print(f"Image Size:       {imgsz}x{imgsz}")
     print(f"Batch Size:       {batch}")
-    print(f"Compute Device:   {device.upper()} ({torch.get_num_threads()} CPU threads)" if device == "cpu" else f"Compute Device:   {device.upper()}")
+    print(
+        f"Compute Device:   {device.upper()} ({torch.get_num_threads()} CPU threads)"
+        if device == "cpu"
+        else f"Compute Device:   {device.upper()}"
+    )
     print(f"Output Directory: {project_dir}/{exp_name}/")
     print("=" * 60 + "\n")
 
@@ -168,9 +171,7 @@ def train_custom_model(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Fine-tune YOLO on custom elephant detection dataset."
-    )
+    parser = argparse.ArgumentParser(description="Fine-tune YOLO on custom elephant detection dataset.")
     parser.add_argument(
         "--model",
         type=str,

@@ -94,7 +94,7 @@ def predict_image(
 
     # Run YOLO inference
     results = model.predict(source=str(img_path), conf=conf_threshold, verbose=False)
-    
+
     elephant_detections = []
     annotated_frame = orig_frame.copy()
 
@@ -117,7 +117,13 @@ def predict_image(
                 label_text = f"ELEPHANT: {conf * 100:.1f}%"
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 (tw, th), baseline = cv2.getTextSize(label_text, font, 0.6, 2)
-                cv2.rectangle(annotated_frame, (x1, max(0, y1 - th - 8)), (x1 + tw + 8, y1), color, -1)
+                cv2.rectangle(
+                    annotated_frame,
+                    (x1, max(0, y1 - th - 8)),
+                    (x1 + tw + 8, y1),
+                    color,
+                    -1,
+                )
                 cv2.putText(
                     annotated_frame,
                     label_text,
