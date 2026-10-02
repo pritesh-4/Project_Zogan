@@ -37,10 +37,15 @@ htmlcov/
 runs/
 *.log
 
+# Runtime alert event logs
+logs/
+*.jsonl
+
 # Sensitive credentials & environment variables
 .env
 .env.*
 *.env
+!.env.example
 *.pem
 *.key
 *.cert

@@ -84,6 +84,12 @@ from ai.risk_engine import (
     RISK_CRITICAL,
 )
 
+# Phase 6 Event Logging & Remote Alert System
+from alerts import (
+    create_alert_event,
+    dispatch_alert,
+)
+
 # Ensure UTF-8 output on Windows
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -444,9 +450,10 @@ def draw_alert_banner(frame, risk_level=None):
 
 def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
     """
-    Triggers local alert actions when an elephant detection is confirmed.
+    Triggers local alert actions and dispatches confirmed incident events.
     Prints a prominent notice to the terminal with timestamp, confidence,
     detailed tracking, and Phase 5 geographic risk context.
+    Dispatches structured AlertEvent to local logs (logs/alerts.jsonl) and Telegram.
     """
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     conf_percent = max_confidence * 100
@@ -484,6 +491,18 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
         print(f"   Confidence:     {conf_percent:.1f}%")
     print(f"   Cooldown initiated: {ALERT_COOLDOWN_SECONDS}s")
     print("=" * 60 + "\n")
+
+    # Phase 6: Dispatch structured event locally (JSONL) and remotely (Telegram)
+    try:
+        event = create_alert_event(
+            confidence=max_confidence,
+            tracked_info=tracked_info,
+            risk_info=risk_info,
+        )
+        return dispatch_alert(event)
+    except Exception as e:
+        print(f"[ALERT DISPATCH ERROR] Failed to dispatch alert: {e}")
+        return None
 
 
 # =============================================================================

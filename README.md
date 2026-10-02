@@ -36,11 +36,11 @@ The long-term vision is to create an intelligent monitoring system that can dete
 
 ---
 
-# 🎯 Current Status: Phase 5 Complete (GPS, Geofencing & Basic Risk Assessment)
+# 🎯 Current Status: Phase 6 Complete (Event Logging + Remote Alert System)
 
-Project Zogan has implemented a software-based geographic intelligence layer, including **simulated camera coordinates**, **multi-tier geofenced zones (Village, Buffer, Forest)**, **Haversine geodesic distance calculation**, **approach trend detection**, and a **rule-based early-warning risk engine (LOW, MEDIUM, HIGH, CRITICAL)** layered seamlessly on top of our fine-tuned custom elephant detector (`elephant_v1`) and ByteTrack multi-object tracker.
+Project Zogan has implemented a reliable **Alert-Event Logging & Remote Notification System**. Every confirmed incident produces a structured, un-fabricated `AlertEvent` recorded locally in JSON Lines (`logs/alerts.jsonl`), queryable via an alert history module, and remotely dispatched through the **Telegram Bot API** with fail-safe error isolation.
 
-### Phase 5 Architecture Pipeline
+### Phase 6 Architecture Pipeline
 
 ```text
                   📷 CAMERA / VIDEO REPLAY
@@ -89,6 +89,14 @@ Elephant_detector/
 │
 ├── config.py                 # Central configuration for simulated GPS, zones, and risk thresholds
 │
+├── alerts/
+│   ├── __init__.py           # Package exports for models, logger, history, telegram, and dispatcher
+│   ├── models.py             # Structured AlertEvent model and factory function (Phase 6)
+│   ├── event_logger.py       # Safe JSON Lines local logger (logs/alerts.jsonl) (Phase 6)
+│   ├── history.py            # Alert querying, filtering, counting, and latest-alert reader (Phase 6)
+│   ├── telegram.py           # Telegram Bot API integration and formatted notifications (Phase 6)
+│   └── dispatcher.py         # Unified fail-safe alert dispatcher (logs locally + Telegram) (Phase 6)
+│
 ├── ai/
 │   ├── geofence.py           # Geofencing, Haversine distance, and zone classification (Phase 5)
 │   ├── risk_engine.py        # Rule-based early-warning risk scoring engine (Phase 5)
@@ -128,6 +136,8 @@ Elephant_detector/
 ├── test_phase3_4.py          # Automated verification test suite for Phase 3.4
 ├── test_phase4.py            # Automated verification test suite for Phase 4
 ├── test_phase5.py            # Automated verification test suite for Phase 5
+├── test_phase6.py            # Automated verification test suite for Phase 6 (Logging & Telegram)
+├── .env.example              # Template for environment variables (Telegram Bot Token & Chat ID)
 ├── elephant.jpg              # Sample test image
 ├── yolo26n.pt                # Pretrained base YOLO model weights
 ├── requirements.txt          # Python package dependencies
@@ -538,7 +548,81 @@ python ai/simulate_risk.py --group-size 4     # Herd approach simulation
 
 ---
 
-# ⚠️ Important Limitations & Safety Disclaimers (Phase 5)
+# 🔔 Phase 6: Event Logging & Remote Alert System
+
+Phase 6 implements a reliable, non-blocking alert incident infrastructure connecting real-time computer vision and rule-based risk evaluation directly to persistent local records and remote Telegram notifications.
+
+### 1. Structured Alert Event Model (`AlertEvent`)
+Each confirmed incident produces a clean event representation containing ONLY observed metrics without fabricating data:
+```json
+{
+  "event_id": "evt_48a901fbc34d",
+  "timestamp": "2026-10-03T00:36:32Z",
+  "risk_level": "HIGH",
+  "risk_score": 72,
+  "confidence": 0.94,
+  "track_id": 2,
+  "group_size": 4,
+  "zone": "WARNING",
+  "distance_m": 380.0,
+  "movement": "APPROACHING",
+  "simulation": true
+}
+```
+
+### 2. Local JSON Lines Logging (`logs/alerts.jsonl`)
+- **JSONL Format**: Each line is an independent, valid JSON record, preventing file lockouts or corruption from incomplete writes.
+- **Safe Directory Creation**: `logs/` directory is automatically created if missing, preventing crashes.
+- **Git Ignored**: Runtime incident logs in `logs/` and `*.jsonl` are automatically ignored by Git.
+
+### 3. Alert History Querying (`alerts/history.py`)
+```python
+from alerts.history import load_alerts, count_alerts, get_latest_alert, filter_by_risk
+
+# Load recent alerts
+recent = load_alerts(limit=5)
+
+# Count total alerts or high-risk incidents
+total = count_alerts()
+high_risk_count = count_alerts(risk_level="HIGH")
+
+# Retrieve the latest confirmed alert
+latest = get_latest_alert()
+```
+
+### 4. Remote Telegram Alert Service (`alerts/telegram.py`)
+- Reads credentials strictly from environment variables: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+- Never hardcodes tokens or commits secrets (`.env` is ignored by Git, `.env.example` provided).
+- Formats structured, human-readable Telegram alerts:
+
+```text
+🚨 PROJECT ZOGAN ALERT
+
+Risk: HIGH
+Score: 72
+Confidence: 94%
+
+Track: #2
+Group Size: 4
+
+Zone: WARNING
+Distance: 380 m
+Movement: APPROACHING
+
+Time: 2026-10-03 00:36:32
+
+Mode: SIMULATION
+```
+
+### 5. Unified Fail-Safe Dispatcher (`alerts/dispatcher.py`)
+- Single clean entry point: `dispatch_alert(event)`.
+- Logs the incident locally to `logs/alerts.jsonl`.
+- Delivers remote notification if Telegram is configured.
+- **Guaranteed Pipeline Safety**: Network timeouts, HTTP errors, or missing credentials will **NEVER** crash the real-time detection camera loop.
+
+---
+
+# ⚠️ Important Limitations & Safety Disclaimers (Phase 6)
 
 Clearly documented constraints and ethical boundaries:
 
@@ -547,7 +631,7 @@ Clearly documented constraints and ethical boundaries:
 3. **No Intent or Behavioral Prediction**: The system cannot predict elephant mood, intent, or charging behavior.
 4. **Camera GPS $\neq$ Elephant GPS**: Camera coordinates are known. An RGB camera cannot determine real-world GPS coordinates without rangefinding/depth sensors. In this phase, elephant coordinates are **simulated** in software.
 5. **No Physical GPS Hardware**: No physical GPS modules (NEO-6M, u-blox) are integrated yet.
-6. **No Remote Alerts Yet**: Alerts remain local (OpenCV HUD banner and terminal output). Remote notification (SMS/WhatsApp/Telegram) is planned for Phase 6.
+6. **Remote Channels (Phase 6 Complete)**: Local JSON Lines logging and Telegram notifications are implemented. Multi-channel failover (SMS, WhatsApp, LoRa, 4G hardware modems) and audio siren triggers remain out-of-scope for Phase 6.
 7. **Stationary Camera Assumption**: Camera orientation and position are assumed static; camera motion compensation is not yet supported.
 
 ---
@@ -610,9 +694,16 @@ Clearly documented constraints and ethical boundaries:
 * [ ] Remote notification system
 
 ### Phase 6 — Remote Alerting & Event Logging
-* [ ] SMS / WhatsApp / Telegram alert dispatcher
+* [x] Alert Event data model (`AlertEvent`, non-fabricated fields)
+* [x] Local JSON Lines logger (`logs/alerts.jsonl` with safe directory creation)
+* [x] Alert history query utility (`alerts/history.py` - load, count, filter, get_latest)
+* [x] Telegram Bot API remote alert integration (`alerts/telegram.py`)
+* [x] Clean environment variable secrets handling (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `.env.example`)
+* [x] Formatted Telegram notification messages
+* [x] Unified fail-safe alert dispatcher (`alerts/dispatcher.py`)
+* [x] Seamless pipeline integration with backward compatibility
+* [ ] Multi-channel fallback (SMS / WhatsApp)
 * [ ] Web monitoring dashboard
-* [ ] Geofencing and localized warning zones
 * [ ] Sound / Siren alarm trigger
 
 ### Phase 7 — Edge AI Deployment
@@ -696,6 +787,7 @@ python test_phase3_2.py
 python test_phase3_4.py
 python test_phase4.py
 python test_phase5.py
+python test_phase6.py
 python ai/simulate_risk.py
 ```
 

@@ -89,6 +89,10 @@ jobs:
         run: |
           python test_phase5.py
 
+      - name: Run Phase 6 tests (Alert Event Logging & Telegram Dispatcher)
+        run: |
+          python test_phase6.py
+
       - name: Run Risk Simulation scenario
         run: |
           python ai/simulate_risk.py
