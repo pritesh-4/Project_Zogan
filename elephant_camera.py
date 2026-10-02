@@ -1,75 +1,68 @@
 """
 =============================================================================
-🐘 ELEPHANT DETECTOR - Real-Time Detection, Tracking & Risk System (Phase 5)
+🐘 PROJECT ZOGAN — REAL-TIME DETECTION, TRACKING & RISK SYSTEM
 =============================================================================
 
-This module captures live video from a webcam or video file, runs YOLO object
-detection using our validated custom fine-tuned elephant model, tracks individual
-elephants across frames with ByteTrack, estimates image-space movement direction,
-evaluates simulated geographic coordinates against geofenced zones (Village,
-Buffer, Forest), computes rule-based early-warning risk scores, requires
-multi-frame persistence, and triggers rate-limited local alerts.
+Main orchestrator. Captures video, runs YOLO detection, tracks elephants via
+ByteTrack, classifies geofence zones, evaluates risk, and triggers alerts.
 
-Pipeline Architecture:
+Uses centralized config.py and delegates rendering to ai.renderer,
+detection logic to ai.detector, and model management to ai.model_manager.
+
+Pipeline:
   CAMERA/VIDEO
        ↓
-  CUSTOM YOLO MODEL (elephant_v1)
+  YOLO MODEL (elephant_v1 or pretrained)
        ↓
-  ELEPHANT DETECTION (conf >= 0.70)
+  ELEPHANT DETECTION (conf >= threshold)
        ↓
-  BYTETRACK TRACKER (Temporary IDs: #1, #2...)
+  BYTETRACK TRACKER → Track IDs (#1, #2...)
        ↓
-  POSITION HISTORY & IMAGE-SPACE MOVEMENT (RIGHT/LEFT/UP/DOWN/STATIONARY)
+  POSITION HISTORY & IMAGE-SPACE MOVEMENT
        ↓
-  GEOFENCING & ZONE CLASSIFICATION (VILLAGE / BUFFER / FOREST)
+  GEOFENCING & ZONE CLASSIFICATION (simulated or live)
        ↓
   RULE-BASED RISK ENGINE (LOW / MEDIUM / HIGH / CRITICAL)
        ↓
-  PERSISTENCE & RISK-AWARE ALERT (WITH COOLDOWN)
+  PERSISTENCE & COOLDOWN-GATED ALERT
+       ↓
+  LOCAL LOG (JSONL) + TELEGRAM (if configured)
 
 Usage:
     python elephant_camera.py                           # Live webcam (default)
     python elephant_camera.py --source elephant.mp4     # Video file replay
-    python elephant_camera.py --source 0                # Explicit webcam index
-    python elephant_camera.py --pretrained              # Pretrained baseline yolo26n.pt
-    python elephant_camera.py --model path/to/model.pt  # Custom weights override
+    python elephant_camera.py --pretrained              # Pretrained baseline
+    python elephant_camera.py --model path/to/model.pt  # Custom weights
     python elephant_camera.py --sim-lat 20.1205 --sim-lon 85.1205
 
 Controls:
-    Press 'Q' or 'q' to quit the application safely.
+    Press 'Q' or 'q' to exit safely.
 
-⚠️ Phase 5 Note:
-    Geographic coordinates are SIMULATED for decision-support prototyping.
-    The camera is at a known coordinate; an RGB camera alone does not produce
-    real-world elephant GPS. The risk score is rule-based and not an ML model.
+⚠️ GPS coordinates are SIMULATED unless real hardware is connected.
+   Camera GPS ≠ Elephant GPS. Risk scores are rule-based prototypes.
 =============================================================================
 """
 
 import sys
 import time
 import argparse
+import math
+import random
 from pathlib import Path
-import numpy as np
+
 import cv2
-from ultralytics import YOLO
 
 # Central configuration
 import config
 
-# Phase 4 tracking module
+# AI modules
 from ai.tracking import (
     ElephantTracker,
-    DEFAULT_MAX_HISTORY,
-    DEFAULT_MOVEMENT_THRESHOLD,
-    DEFAULT_MAX_LOST_FRAMES,
-    DEFAULT_SMOOTHING_WINDOW,
     DIRECTION_RIGHT,
     DIRECTION_LEFT,
     DIRECTION_UP,
     DIRECTION_DOWN,
 )
-
-# Phase 5 Geofencing & Risk Engine
 from ai.geofence import (
     classify_zone,
     get_distance_to_protected_zone,
@@ -83,12 +76,18 @@ from ai.risk_engine import (
     RISK_HIGH,
     RISK_CRITICAL,
 )
-
-# Phase 6 Event Logging & Remote Alert System
-from alerts import (
-    create_alert_event,
-    dispatch_alert,
+from ai.renderer import (
+    draw_bounding_box,
+    draw_hud,
+    draw_alert_banner,
 )
+from ai.model_manager import resolve_model_path
+
+# Alert system
+from alerts import create_alert_event, dispatch_alert
+
+# YOLO import
+from ultralytics import YOLO
 
 # Ensure UTF-8 output on Windows
 if hasattr(sys.stdout, "reconfigure"):
@@ -97,350 +96,30 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # =============================================================================
-# ⚙️ CONFIGURATION PARAMETERS
+# 🔄 BACKWARD COMPATIBILITY EXPORTS & CONSTANTS
 # =============================================================================
+MODEL_PATH = config.PRETRAINED_MODEL_PATH
+CUSTOM_MODEL_PATH = config.CUSTOM_MODEL_PATH
+FALLBACK_CUSTOM_PATH = config.FALLBACK_CUSTOM_PATH
+PRETRAINED_MODEL_PATH = config.PRETRAINED_MODEL_PATH
+USE_CUSTOM_MODEL = config.USE_CUSTOM_MODEL
+TARGET_CLASS = config.TARGET_CLASS
+CONFIDENCE_THRESHOLD = config.CONFIDENCE_THRESHOLD
+REQUIRED_DETECTIONS = config.REQUIRED_DETECTIONS
+ALERT_COOLDOWN_SECONDS = config.ALERT_COOLDOWN_SECONDS
+ALERT_BANNER_DURATION_SECONDS = config.ALERT_BANNER_DURATION_SECONDS
+CAMERA_INDEX = config.CAMERA_INDEX
+MOVEMENT_THRESHOLD_PIXELS = config.MOVEMENT_THRESHOLD_PIXELS
+TRACKER_CONFIG = config.TRACKER_CONFIG
+COLOR_ALERT_RED = config.COLOR_ALERT_RED
+COLOR_WARN_YELLOW = config.COLOR_WARN_YELLOW
+COLOR_SAFE_GREEN = config.COLOR_SAFE_GREEN
+COLOR_OTHER_OBJ = config.COLOR_OTHER_OBJ
+COLOR_TEXT_WHITE = config.COLOR_TEXT_WHITE
+COLOR_OVERLAY_BG = config.COLOR_OVERLAY_BG
 
-# Model Selection: Set USE_CUSTOM_MODEL = True to use our fine-tuned elephant model,
-# or False to fall back to the general pretrained COCO model.
-USE_CUSTOM_MODEL = True
-
-CUSTOM_MODEL_PATH = "models/elephant_v1/best.pt"
-FALLBACK_CUSTOM_PATH = "runs/detect/elephant_v1/weights/best.pt"
-PRETRAINED_MODEL_PATH = "yolo26n.pt"
-
-
-def resolve_active_model(use_custom: bool = USE_CUSTOM_MODEL, override_path: str = None):
-    """
-    Resolves active model path and human-readable label with clean fallback handling.
-    """
-    if override_path:
-        p = Path(override_path)
-        return str(p), f"Custom ({p.name})"
-
-    if use_custom:
-        if Path(CUSTOM_MODEL_PATH).exists():
-            return CUSTOM_MODEL_PATH, "elephant_v1 (Custom)"
-        elif Path(FALLBACK_CUSTOM_PATH).exists():
-            return FALLBACK_CUSTOM_PATH, "elephant_v1 (Custom)"
-        else:
-            return None, "elephant_v1 (Custom)"
-
-    return PRETRAINED_MODEL_PATH, "yolo26n (Pretrained)"
-
-
-_active_path, MODEL_NAME = resolve_active_model(USE_CUSTOM_MODEL)
-MODEL_PATH = _active_path or CUSTOM_MODEL_PATH
-
-# Minimum confidence required to accept an elephant detection (70%)
-CONFIDENCE_THRESHOLD = 0.70
-
-# Number of consecutive frames an elephant must be detected
-# before confirming and triggering an alert (prevents single-frame false alarms)
-REQUIRED_DETECTIONS = 5
-
-# Time in seconds to wait before allowing another alert (prevents alert spam)
-ALERT_COOLDOWN_SECONDS = 30
-
-# Duration in seconds to display the high-priority visual alert banner on screen
-ALERT_BANNER_DURATION_SECONDS = 4.0
-
-# Target class name to monitor
-TARGET_CLASS = "elephant"
-
-# Default webcam index (0 is usually the built-in or primary USB camera)
-CAMERA_INDEX = 0
-
-# Tracking Configuration (Phase 4)
-TRACKER_CONFIG = "bytetrack.yaml"
-MOVEMENT_THRESHOLD_PIXELS = DEFAULT_MOVEMENT_THRESHOLD  # 10.0 pixels
-MAX_POSITION_HISTORY = DEFAULT_MAX_HISTORY  # 20 points
-MAX_LOST_FRAMES = DEFAULT_MAX_LOST_FRAMES  # 30 frames (~1.0s)
-SMOOTHING_WINDOW_FRAMES = DEFAULT_SMOOTHING_WINDOW  # 5 frames
-
-# Colors for bounding boxes and HUD (BGR format for OpenCV)
-COLOR_ALERT_RED = (0, 0, 255)  # Red for confirmed elephant / alert / high risk
-COLOR_WARN_YELLOW = (0, 215, 255)  # Amber/Yellow for possible elephant / medium risk
-COLOR_SAFE_GREEN = (0, 255, 0)  # Green for normal monitoring / low risk
-COLOR_OTHER_OBJ = (255, 180, 0)  # Cyan/Blue for other detected objects
-COLOR_TEXT_WHITE = (255, 255, 255)  # White for text readability
-COLOR_OVERLAY_BG = (25, 25, 25)  # Dark gray for HUD banner background
-
-
-# =============================================================================
-# 🎨 UI & DRAWING HELPER FUNCTIONS
-# =============================================================================
-
-
-def draw_bounding_box(
-    frame,
-    x1,
-    y1,
-    x2,
-    y2,
-    label,
-    color,
-    is_target=False,
-    sub_label=None,
-    trajectory=None,
-    hud_bar_height=85,
-):
-    """
-    Draws a styled bounding box with an informative background label tag.
-    Optionally renders movement direction sub-label, center point, and trajectory trail.
-    """
-    thickness = 3 if is_target else 2
-    cv2.rectangle(frame, (x1, y1), (x2, y2), color, thickness)
-
-    # Draw center point and trajectory trail if available
-    if trajectory and len(trajectory) > 1:
-        pts = np.array(trajectory, dtype=np.int32).reshape((-1, 1, 2))
-        cv2.polylines(
-            frame,
-            [pts],
-            isClosed=False,
-            color=(0, 215, 255),
-            thickness=2,
-            lineType=cv2.LINE_AA,
-        )
-
-    if trajectory and len(trajectory) > 0:
-        cx, cy = int(trajectory[-1][0]), int(trajectory[-1][1])
-        cv2.circle(frame, (cx, cy), 5, (0, 255, 255), -1, cv2.LINE_AA)
-        cv2.circle(frame, (cx, cy), 2, (0, 0, 255), -1, cv2.LINE_AA)
-
-    # Calculate text sizes for multi-line badge
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.55 if is_target else 0.5
-    text_thickness = 2 if is_target else 1
-    (text_w, text_h), _ = cv2.getTextSize(label, font, font_scale, text_thickness)
-
-    sub_w, sub_h = 0, 0
-    if sub_label:
-        sub_scale = 0.45
-        (sub_w, sub_h), _ = cv2.getTextSize(sub_label, font, sub_scale, 1)
-
-    badge_w = max(text_w, sub_w) + 14
-    line_spacing = 4
-    badge_height = text_h + (sub_h + line_spacing if sub_label else 0) + 12
-
-    # Avoid top HUD bar
-    if y1 - badge_height >= hud_bar_height:
-        # Place label above the box
-        label_y1 = y1 - badge_height
-        label_y2 = y1
-    else:
-        # Place label inside the box, guaranteed below HUD bar
-        label_y1 = max(y1, hud_bar_height + 4)
-        label_y2 = label_y1 + badge_height
-
-    label_x1 = max(0, x1)
-    label_x2 = min(frame.shape[1], label_x1 + badge_w)
-
-    # Draw label background rectangle
-    cv2.rectangle(frame, (label_x1, label_y1), (label_x2, label_y2), color, -1)
-    # Add a thin white border around the badge for maximum crispness
-    cv2.rectangle(frame, (label_x1, label_y1), (label_x2, label_y2), (255, 255, 255), 1)
-
-    # Primary label
-    t1_y = label_y1 + text_h + 5
-    cv2.putText(
-        frame,
-        label,
-        (label_x1 + 6, t1_y),
-        font,
-        font_scale,
-        COLOR_TEXT_WHITE,
-        text_thickness,
-        cv2.LINE_AA,
-    )
-
-    # Movement sub-label
-    if sub_label:
-        t2_y = t1_y + sub_h + line_spacing
-        cv2.putText(
-            frame,
-            sub_label,
-            (label_x1 + 6, t2_y),
-            font,
-            0.45,
-            (220, 255, 255),
-            1,
-            cv2.LINE_AA,
-        )
-
-
-def draw_hud(
-    frame,
-    status_text,
-    status_color,
-    detection_count,
-    fps,
-    cooldown_remaining,
-    model_name=None,
-    tracking_summary=None,
-    tracked_count=0,
-    risk_assessment=None,
-    geo_mode="SIMULATION",
-):
-    """
-    Draws an informative Heads-Up Display (HUD) overlay at the top of the video frame.
-    Shows current monitoring state, active model version, persistence counter, FPS,
-    cooldown timer, active tracked elephant movement, and Phase 5 geographic risk context.
-    """
-    height, width = frame.shape[:2]
-    active_model_str = model_name or MODEL_NAME
-
-    has_tracks = (tracked_count > 0) and bool(tracking_summary)
-    has_risk = risk_assessment is not None and tracked_count > 0
-
-    if has_risk:
-        bar_height = 98
-    elif has_tracks:
-        bar_height = 80
-    else:
-        bar_height = 65
-
-    # Create top status bar background
-    overlay = frame.copy()
-    cv2.rectangle(overlay, (0, 0), (width, bar_height), COLOR_OVERLAY_BG, -1)
-    cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
-
-    # Determine responsive font scale based on frame width
-    scale_factor = min(1.0, max(0.7, width / 700.0))
-    status_scale = 0.68 * scale_factor
-    sub_scale = 0.48 * scale_factor
-
-    # Row 1: Status text (Left) & Model tag (Right)
-    status_str = f"STATUS: {status_text}"
-    cv2.putText(
-        frame,
-        status_str,
-        (15, 26),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        status_scale,
-        status_color,
-        2,
-        cv2.LINE_AA,
-    )
-
-    model_tag = f"MODEL: {active_model_str}"
-    (model_w, _), _ = cv2.getTextSize(model_tag, cv2.FONT_HERSHEY_SIMPLEX, sub_scale, 1)
-    model_x = max(int(width * 0.52), width - model_w - 15)
-    cv2.putText(
-        frame,
-        model_tag,
-        (model_x, 26),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        sub_scale,
-        (0, 255, 255),
-        1,
-        cv2.LINE_AA,
-    )
-
-    # Row 2: Persistence / Cooldown info & FPS
-    if 0 < detection_count < REQUIRED_DETECTIONS:
-        sub_text = f"Persistence: {detection_count}/{REQUIRED_DETECTIONS} consecutive frames"
-        sub_color = COLOR_WARN_YELLOW
-    elif cooldown_remaining > 0:
-        sub_text = f"Cooldown Active: {cooldown_remaining:.0f}s remaining (Monitoring continues)"
-        sub_color = COLOR_WARN_YELLOW
-    else:
-        sub_text = f"Target: {TARGET_CLASS.upper()} | Min Conf: {int(CONFIDENCE_THRESHOLD * 100)}% | Press 'Q' to exit"
-        sub_color = (200, 200, 200)
-
-    cv2.putText(
-        frame,
-        sub_text,
-        (15, 48),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        sub_scale,
-        sub_color,
-        1,
-        cv2.LINE_AA,
-    )
-
-    fps_text = f"FPS: {fps:.1f}"
-    (fps_w, _), _ = cv2.getTextSize(fps_text, cv2.FONT_HERSHEY_SIMPLEX, sub_scale, 1)
-    cv2.putText(
-        frame,
-        fps_text,
-        (width - fps_w - 15, 48),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        sub_scale,
-        (255, 255, 255),
-        1,
-        cv2.LINE_AA,
-    )
-
-    # Row 3: Global Tracking HUD summary (if active tracks present)
-    if has_tracks:
-        track_text = f"TRACKS ({tracked_count}): {tracking_summary}"
-        cv2.putText(
-            frame,
-            track_text,
-            (15, 68),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            sub_scale,
-            COLOR_WARN_YELLOW,
-            1,
-            cv2.LINE_AA,
-        )
-
-    # Row 4: Geofencing & Risk Assessment Summary (Phase 5)
-    if has_risk:
-        r = risk_assessment
-        risk_color = (
-            COLOR_ALERT_RED
-            if r.level in (RISK_CRITICAL, RISK_HIGH)
-            else (COLOR_WARN_YELLOW if r.level == RISK_MEDIUM else COLOR_SAFE_GREEN)
-        )
-        geo_text = (
-            f"GEO [{geo_mode}]: Zone: {r.zone} | Protected Dist: {r.distance_to_protected:.0f}m | "
-            f"Trend: {r.trend} | Risk: {r.level} ({r.score}/100)"
-        )
-        cv2.putText(
-            frame,
-            geo_text,
-            (15, 88),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.43 * scale_factor,
-            risk_color,
-            1,
-            cv2.LINE_AA,
-        )
-
-
-def draw_alert_banner(frame, risk_level=None):
-    """
-    Renders an emergency visual alert banner across the bottom of the screen.
-    """
-    height, width = frame.shape[:2]
-    banner_y1 = height - 70
-    banner_y2 = height - 15
-
-    # Red translucent banner
-    overlay = frame.copy()
-    cv2.rectangle(overlay, (20, banner_y1), (width - 20, banner_y2), COLOR_ALERT_RED, -1)
-    cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
-
-    # Alert border
-    cv2.rectangle(frame, (20, banner_y1), (width - 20, banner_y2), COLOR_TEXT_WHITE, 2)
-
-    # Alert message text
-    tag = f" — RISK: {risk_level}" if risk_level else ""
-    alert_msg = f"[!] ELEPHANT DETECTED — EARLY WARNING ALERT{tag} [!]"
-    (text_w, text_h), _ = cv2.getTextSize(alert_msg, cv2.FONT_HERSHEY_SIMPLEX, 0.65, 2)
-    text_x = max(30, (width - text_w) // 2)
-    cv2.putText(
-        frame,
-        alert_msg,
-        (text_x, banner_y1 + 38),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.65,
-        COLOR_TEXT_WHITE,
-        2,
-        cv2.LINE_AA,
-    )
+# Backward compatibility function alias
+resolve_active_model = resolve_model_path
 
 
 # =============================================================================
@@ -452,8 +131,8 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
     """
     Triggers local alert actions and dispatches confirmed incident events.
     Prints a prominent notice to the terminal with timestamp, confidence,
-    detailed tracking, and Phase 5 geographic risk context.
-    Dispatches structured AlertEvent to local logs (logs/alerts.jsonl) and Telegram.
+    detailed tracking, and geographic risk context.
+    Dispatches structured AlertEvent to local logs and optionally Telegram.
     """
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     conf_percent = max_confidence * 100
@@ -489,10 +168,10 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
             print(f"   Movement:       {m}")
     else:
         print(f"   Confidence:     {conf_percent:.1f}%")
-    print(f"   Cooldown initiated: {ALERT_COOLDOWN_SECONDS}s")
+    print(f"   Cooldown initiated: {config.ALERT_COOLDOWN_SECONDS}s")
     print("=" * 60 + "\n")
 
-    # Phase 6: Dispatch structured event locally (JSONL) and remotely (Telegram)
+    # Dispatch structured event locally (JSONL) and remotely (Telegram)
     try:
         event = create_alert_event(
             confidence=max_confidence,
@@ -506,6 +185,60 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
 
 
 # =============================================================================
+# 🗺️ SIMULATED ELEPHANT COORDINATE GENERATOR
+# =============================================================================
+
+
+class SimulatedElephantCoordinates:
+    """
+    Generates simulated elephant GPS coordinates that ACTUALLY CHANGE over time
+    to make geofence zone transitions and risk assessments meaningful.
+
+    In real deployment, these would come from triangulation, depth sensors, or
+    GPS collar data. This simulation creates a gradual drift to demonstrate
+    the risk engine responding to spatial changes.
+
+    ⚠️ THIS IS A SIMULATION. Camera GPS ≠ Elephant GPS.
+    """
+
+    def __init__(self, base_lat: float, base_lon: float):
+        self._base_lat = base_lat
+        self._base_lon = base_lon
+        self._current_lat = base_lat
+        self._current_lon = base_lon
+        self._step = 0
+        # Random drift direction (simulates unpredictable movement)
+        self._drift_angle = random.uniform(0, 2 * math.pi)
+        # Meters per step (small drift per frame, ~2-5m)
+        self._drift_rate = random.uniform(0.000015, 0.000035)  # degrees per step
+
+    def update(self) -> tuple:
+        """
+        Returns the next simulated coordinate with gradual spatial drift.
+
+        The elephant slowly moves in a semi-random direction, occasionally
+        changing course. This creates realistic zone transitions over time.
+        """
+        self._step += 1
+
+        # Occasionally shift drift direction (every ~100 steps)
+        if self._step % 100 == 0:
+            self._drift_angle += random.uniform(-0.5, 0.5)
+
+        # Apply small drift
+        self._current_lat += self._drift_rate * math.cos(self._drift_angle)
+        self._current_lon += self._drift_rate * math.sin(self._drift_angle)
+
+        return self._current_lat, self._current_lon
+
+    def reset(self, lat: float, lon: float) -> None:
+        """Resets to a new base position."""
+        self._current_lat = lat
+        self._current_lon = lon
+        self._step = 0
+
+
+# =============================================================================
 # 🔍 MAIN DETECTION & TRACKING LOOP
 # =============================================================================
 
@@ -513,11 +246,11 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
 def main(
     use_custom=None,
     model_override=None,
-    camera_idx=CAMERA_INDEX,
-    conf_thresh=CONFIDENCE_THRESHOLD,
+    camera_idx=None,
+    conf_thresh=None,
     source=None,
-    movement_threshold=MOVEMENT_THRESHOLD_PIXELS,
-    tracker_config=TRACKER_CONFIG,
+    movement_threshold=None,
+    tracker_config=None,
     no_show=False,
     max_frames=None,
     sim_mode=True,
@@ -527,48 +260,56 @@ def main(
 ):
     """
     Main detection, tracking, geofencing, and risk analysis execution loop.
-    Supports live webcam feeds or recorded video file replay with simulated coordinates.
+    Supports live webcam feeds or recorded video file replay.
     """
-    # Determine model configuration
-    use_custom_flag = USE_CUSTOM_MODEL if use_custom is None else use_custom
-    model_path, model_label = resolve_active_model(use_custom_flag, model_override)
+    # Apply config defaults for any unspecified parameters
+    if camera_idx is None:
+        camera_idx = config.CAMERA_INDEX
+    if conf_thresh is None:
+        conf_thresh = config.CONFIDENCE_THRESHOLD
+    if movement_threshold is None:
+        movement_threshold = config.MOVEMENT_THRESHOLD_PIXELS
+    if tracker_config is None:
+        tracker_config = config.TRACKER_CONFIG
 
-    # 1. Missing model check
+    # 1. Resolve model path
+    use_custom_flag = config.USE_CUSTOM_MODEL if use_custom is None else use_custom
+    model_path, model_label = resolve_model_path(use_custom_flag, model_override)
+
     if not model_path or not Path(model_path).exists():
         print("\n" + "=" * 60)
-        print("ERROR: Custom elephant model not found.")
-        print(f"Expected: {CUSTOM_MODEL_PATH} or {FALLBACK_CUSTOM_PATH}")
-        print("Please train the model first (python ai/train.py)")
-        print("or run with pretrained model: python elephant_camera.py --pretrained")
+        print("ERROR: Model not found.")
+        print(f"Expected: {config.CUSTOM_MODEL_PATH} or {config.FALLBACK_CUSTOM_PATH}")
+        print("Train first (python ai/train.py) or use: python elephant_camera.py --pretrained")
         print("=" * 60 + "\n")
         return False
 
-    # 2. Load the YOLO model
+    # 2. Load YOLO model
     try:
         model = YOLO(model_path)
     except Exception as e:
         print(f"\nERROR: Failed to load YOLO model from '{model_path}': {e}")
         return False
 
-    # 3. Verify target class exists in loaded model
+    # 3. Verify target class exists
     model_classes = model.names
     target_class_found = False
     target_class_id = None
     for cid, cname in model_classes.items():
-        if cname.lower() == TARGET_CLASS.lower():
+        if cname.lower() == config.TARGET_CLASS.lower():
             target_class_found = True
             target_class_id = cid
             break
 
     if not target_class_found:
         print("\n" + "=" * 60)
-        print(f"ERROR: The loaded model does not contain a '{TARGET_CLASS}' class.")
-        print(f"Model path: {model_path}")
-        print(f"Available classes: {model_classes}")
+        print(f"ERROR: Model does not contain '{config.TARGET_CLASS}' class.")
+        print(f"Model: {model_path}")
+        print(f"Available: {model_classes}")
         print("=" * 60 + "\n")
         return False
 
-    # 4. Resolve input source (Webcam index or video file)
+    # 4. Resolve input source
     input_source = source if source is not None else camera_idx
     if isinstance(input_source, str) and input_source.isdigit():
         input_source = int(input_source)
@@ -582,20 +323,21 @@ def main(
     else:
         source_desc = f"Webcam Index: {input_source}"
 
-    # Print startup banner
+    # Startup banner
     print("=" * 60)
-    print("🐘 PROJECT ZOGAN — DETECTION, TRACKING & RISK SYSTEM (PHASE 5)")
+    print("🐘 PROJECT ZOGAN — DETECTION, TRACKING & RISK SYSTEM")
     print(f"Source:               {source_desc}")
     print(f"Model:                {model_label}")
     print(f"Weights:              {model_path}")
-    print(f"Target Class:         {TARGET_CLASS} (Class ID: {target_class_id})")
+    print(f"Target Class:         {config.TARGET_CLASS} (Class ID: {target_class_id})")
     print(f"Confidence Threshold: {int(conf_thresh * 100)}%")
     print(f"Tracker:              ByteTrack ({tracker_config})")
     print(f"Movement Threshold:   {movement_threshold} pixels")
     print(f"Geofencing Mode:      {'SOFTWARE SIMULATION' if sim_mode else 'DISABLED'}")
-    print(f"Sim Camera GPS:       ({config.CAMERA_LATITUDE:.6f}, {config.CAMERA_LONGITUDE:.6f})")
-    print(f"Required Detections:  {REQUIRED_DETECTIONS} frames")
-    print(f"Alert Cooldown:       {ALERT_COOLDOWN_SECONDS}s")
+    if sim_mode:
+        print(f"Sim Camera GPS:       ({config.CAMERA_LATITUDE:.6f}, {config.CAMERA_LONGITUDE:.6f})")
+    print(f"Required Detections:  {config.REQUIRED_DETECTIONS} frames")
+    print(f"Alert Cooldown:       {config.ALERT_COOLDOWN_SECONDS}s")
     print("=" * 60)
 
     # 5. Open video stream
@@ -609,21 +351,21 @@ def main(
     if not camera.isOpened():
         print(f"ERROR: Unable to open {source_desc}.")
         if not is_video_file:
-            print("Please check that your camera is connected and not used by another application.")
+            print("Check that your camera is connected and not in use by another application.")
         return False
 
-    print("[INFO] Stream initialized successfully. Press 'Q' to exit.\n")
+    print("[INFO] Stream initialized. Press 'Q' to exit.\n")
 
-    # Initialize tracking entity
+    # Initialize tracking
     tracker = ElephantTracker(
-        max_history=MAX_POSITION_HISTORY,
+        max_history=config.MAX_POSITION_HISTORY,
         movement_threshold=movement_threshold,
-        max_lost_frames=MAX_LOST_FRAMES,
-        window_size=SMOOTHING_WINDOW_FRAMES,
+        max_lost_frames=config.MAX_LOST_FRAMES,
+        window_size=config.SMOOTHING_WINDOW_FRAMES,
     )
     fallback_track_id = 1
 
-    # Initialize Geofencing zones and Risk Engine (Phase 5)
+    # Initialize geofencing and risk engine
     zones = create_default_zones(
         village_center=(config.VILLAGE_CENTER_LAT, config.VILLAGE_CENTER_LON),
         village_radius=config.VILLAGE_RADIUS_METERS,
@@ -636,9 +378,10 @@ def main(
         stability_threshold_meters=config.TREND_STABILITY_THRESHOLD_METERS,
     )
 
-    # Simulated coordinate anchor for demo elephant
+    # Simulated elephant coordinate generator (ACTUALLY MOVES each frame)
     base_sim_lat = sim_lat if sim_lat is not None else (config.CAMERA_LATITUDE - 0.0020)
     base_sim_lon = sim_lon if sim_lon is not None else (config.CAMERA_LONGITUDE - 0.0020)
+    sim_coords = SimulatedElephantCoordinates(base_sim_lat, base_sim_lon)
 
     # State variables
     consecutive_elephant_frames = 0
@@ -654,26 +397,25 @@ def main(
             success, frame = camera.read()
             if not success:
                 if is_video_file:
-                    print(f"\n[INFO] End of video file '{input_source}' reached. Playback finished.")
+                    print(f"\n[INFO] End of video file '{input_source}'. Playback finished.")
                 else:
                     print("\nWARNING: Failed to read frame from camera.")
                 break
 
             frame_number += 1
             if max_frames and frame_number > max_frames:
-                print(f"\n[INFO] Reached requested max_frames ({max_frames}). Halting.")
+                print(f"\n[INFO] Reached max_frames ({max_frames}). Halting.")
                 break
 
             current_time = time.time()
 
-            # Calculate running FPS
+            # Calculate running FPS (exponential moving average)
             delta_time = current_time - prev_frame_time
             prev_frame_time = current_time
             if delta_time > 0:
                 fps = 0.9 * fps + 0.1 * (1.0 / delta_time) if fps > 0 else (1.0 / delta_time)
 
-            # Run YOLO detection & ByteTrack tracking on current frame
-            # persist=True maintains track IDs across sequential frames
+            # Run YOLO detection & ByteTrack tracking
             results = model.track(frame, persist=True, tracker=tracker_config, verbose=False)
 
             candidate_elephants = []
@@ -687,35 +429,18 @@ def main(
                     class_name = result.names.get(class_id, f"class_{class_id}")
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                    # Extract tracker ID if assigned by ByteTrack
+                    # Extract tracker ID
                     track_id = None
                     if getattr(box, "id", None) is not None and box.id is not None:
                         track_id = int(box.id[0])
 
-                    if class_name.lower() == TARGET_CLASS.lower():
+                    if class_name.lower() == config.TARGET_CLASS.lower():
                         if confidence >= conf_thresh:
-                            candidate_elephants.append(
-                                {
-                                    "id": track_id,
-                                    "bbox": (x1, y1, x2, y2),
-                                    "conf": confidence,
-                                }
-                            )
+                            candidate_elephants.append({"id": track_id, "bbox": (x1, y1, x2, y2), "conf": confidence})
                         else:
-                            low_conf_elephants.append(
-                                {
-                                    "bbox": (x1, y1, x2, y2),
-                                    "conf": confidence,
-                                }
-                            )
+                            low_conf_elephants.append({"bbox": (x1, y1, x2, y2), "conf": confidence})
                     else:
-                        other_objects.append(
-                            {
-                                "name": class_name,
-                                "bbox": (x1, y1, x2, y2),
-                                "conf": confidence,
-                            }
-                        )
+                        other_objects.append({"name": class_name, "bbox": (x1, y1, x2, y2), "conf": confidence})
 
             # Ensure track ID is present for all confirmed candidates
             detections_to_track = []
@@ -724,28 +449,20 @@ def main(
                 if tid is None:
                     tid = fallback_track_id
                     fallback_track_id += 1
-                detections_to_track.append(
-                    {
-                        "id": tid,
-                        "bbox": cand["bbox"],
-                        "conf": cand["conf"],
-                    }
-                )
+                detections_to_track.append({"id": tid, "bbox": cand["bbox"], "conf": cand["conf"]})
 
-            # Update high-level ElephantTracker with current frame's observations
+            # Update tracker
             active_tracks = tracker.update(detections_to_track, frame_idx=frame_number)
 
             # =================================================================
-            # 🗺️ GEOFENCING & RISK ASSESSMENT (PHASE 5)
+            # 🗺️ GEOFENCING & RISK ASSESSMENT
             # =================================================================
             elephant_found_in_frame = len(active_tracks) > 0
             max_elephant_confidence = max([t.confidence for t in active_tracks], default=0.0)
 
             if elephant_found_in_frame and sim_mode:
-                # Simulated elephant coordinates (step closer if moving, or static in buffer)
-                # In simulation mode, evaluate proximity to protected village zone
-                sim_elephant_lat = base_sim_lat
-                sim_elephant_lon = base_sim_lon
+                # Get MOVING simulated coordinates (not static!)
+                sim_elephant_lat, sim_elephant_lon = sim_coords.update()
 
                 current_zone = classify_zone(sim_elephant_lat, sim_elephant_lon, zones)
                 dist_to_protected = get_distance_to_protected_zone(sim_elephant_lat, sim_elephant_lon, zones)
@@ -773,11 +490,12 @@ def main(
             # 🚨 ALERT & COOLDOWN LOGIC
             # =================================================================
             time_since_last_alert = current_time - last_alert_time
-            cooldown_active = time_since_last_alert < ALERT_COOLDOWN_SECONDS
-            cooldown_remaining = max(0.0, ALERT_COOLDOWN_SECONDS - time_since_last_alert) if cooldown_active else 0.0
+            cooldown_active = time_since_last_alert < config.ALERT_COOLDOWN_SECONDS
+            cooldown_remaining = (
+                max(0.0, config.ALERT_COOLDOWN_SECONDS - time_since_last_alert) if cooldown_active else 0.0
+            )
 
-            if consecutive_elephant_frames >= REQUIRED_DETECTIONS:
-                # Check optional minimum risk filter (if configured)
+            if consecutive_elephant_frames >= config.REQUIRED_DETECTIONS:
                 should_alert = not cooldown_active
                 if min_alert_risk and current_risk_assessment:
                     should_alert = should_alert and (
@@ -795,7 +513,7 @@ def main(
                         risk_info=risk_info_dict,
                     )
                     last_alert_time = current_time
-                    alert_banner_until = current_time + ALERT_BANNER_DURATION_SECONDS
+                    alert_banner_until = current_time + config.ALERT_BANNER_DURATION_SECONDS
 
             # =================================================================
             # 🎨 RENDER VISUAL OUTPUT
@@ -817,13 +535,13 @@ def main(
                     x2=x2,
                     y2=y2,
                     label=label,
-                    color=COLOR_ALERT_RED,
+                    color=config.COLOR_ALERT_RED,
                     is_target=True,
                     sub_label=sub_label,
                     trajectory=list(track.history),
                 )
 
-            # 2. Draw low-confidence candidate elephants
+            # 2. Draw low-confidence candidates
             for low in low_conf_elephants:
                 x1, y1, x2, y2 = low["bbox"]
                 label = f"elephant (low conf): {int(low['conf'] * 100)}%"
@@ -834,11 +552,11 @@ def main(
                     x2,
                     y2,
                     label=label,
-                    color=COLOR_WARN_YELLOW,
+                    color=config.COLOR_WARN_YELLOW,
                     is_target=False,
                 )
 
-            # 3. Draw other detected objects
+            # 3. Draw other objects
             for obj in other_objects:
                 x1, y1, x2, y2 = obj["bbox"]
                 label = f"{obj['name']}: {int(obj['conf'] * 100)}%"
@@ -849,29 +567,26 @@ def main(
                     x2,
                     y2,
                     label=label,
-                    color=COLOR_OTHER_OBJ,
+                    color=config.COLOR_OTHER_OBJ,
                     is_target=False,
                 )
 
-            # Determine visual status text and badge color
-            if consecutive_elephant_frames >= REQUIRED_DETECTIONS:
-                if current_risk_assessment and current_risk_assessment.level in (
-                    RISK_CRITICAL,
-                    RISK_HIGH,
-                ):
+            # Determine visual status
+            if consecutive_elephant_frames >= config.REQUIRED_DETECTIONS:
+                if current_risk_assessment and current_risk_assessment.level in (RISK_CRITICAL, RISK_HIGH):
                     status_text = f"ELEPHANT CONFIRMED — RISK: {current_risk_assessment.level}"
-                    status_color = COLOR_ALERT_RED
+                    status_color = config.COLOR_ALERT_RED
                 else:
                     status_text = "ELEPHANT CONFIRMED"
-                    status_color = COLOR_ALERT_RED
+                    status_color = config.COLOR_ALERT_RED
             elif consecutive_elephant_frames > 0:
-                status_text = f"POSSIBLE ELEPHANT ({consecutive_elephant_frames}/{REQUIRED_DETECTIONS})"
-                status_color = COLOR_WARN_YELLOW
+                status_text = f"POSSIBLE ELEPHANT ({consecutive_elephant_frames}/{config.REQUIRED_DETECTIONS})"
+                status_color = config.COLOR_WARN_YELLOW
             else:
                 status_text = "MONITORING (No Elephant Detected)"
-                status_color = COLOR_SAFE_GREEN
+                status_color = config.COLOR_SAFE_GREEN
 
-            # Render top HUD with tracking and risk status
+            # Render HUD
             draw_hud(
                 frame=frame,
                 status_text=status_text,
@@ -886,12 +601,12 @@ def main(
                 geo_mode="SIMULATION" if sim_mode else "OFF",
             )
 
-            # Render emergency alert banner if active
+            # Render alert banner if active
             if current_time < alert_banner_until:
                 r_lvl = current_risk_assessment.level if current_risk_assessment else None
                 draw_alert_banner(frame, risk_level=r_lvl)
 
-            # Display video window if not in headless mode
+            # Display video window
             if not no_show:
                 cv2.imshow("Elephant Detection & Tracking - Early Warning System", frame)
                 key = cv2.waitKey(1) & 0xFF
@@ -915,12 +630,12 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Real-Time Elephant Detection, Tracking & Risk System (Phase 5)")
+    parser = argparse.ArgumentParser(description="Real-Time Elephant Detection, Tracking & Risk System")
     parser.add_argument(
         "--source",
         type=str,
         default=None,
-        help="Video source: camera index (0) or video file path (video.mp4)",
+        help="Video source: camera index (0) or video file path",
     )
     parser.add_argument(
         "--pretrained",
@@ -931,33 +646,29 @@ if __name__ == "__main__":
     parser.add_argument(
         "--camera",
         type=int,
-        default=CAMERA_INDEX,
-        help=f"Camera index (default: {CAMERA_INDEX})",
+        default=config.CAMERA_INDEX,
+        help=f"Camera index (default: {config.CAMERA_INDEX})",
     )
     parser.add_argument(
         "--conf",
         type=float,
-        default=CONFIDENCE_THRESHOLD,
-        help=f"Confidence threshold (default: {CONFIDENCE_THRESHOLD})",
+        default=config.CONFIDENCE_THRESHOLD,
+        help=f"Confidence threshold (default: {config.CONFIDENCE_THRESHOLD})",
     )
     parser.add_argument(
         "--thresh-px",
         type=float,
-        default=MOVEMENT_THRESHOLD_PIXELS,
-        help=f"Movement threshold in pixels (default: {MOVEMENT_THRESHOLD_PIXELS})",
+        default=config.MOVEMENT_THRESHOLD_PIXELS,
+        help=f"Movement threshold in pixels (default: {config.MOVEMENT_THRESHOLD_PIXELS})",
     )
     parser.add_argument(
         "--tracker",
         type=str,
-        default=TRACKER_CONFIG,
-        help=f"Tracker configuration (default: {TRACKER_CONFIG})",
+        default=config.TRACKER_CONFIG,
+        help=f"Tracker configuration (default: {config.TRACKER_CONFIG})",
     )
-    parser.add_argument(
-        "--no-show",
-        action="store_true",
-        help="Run headless without opening OpenCV window",
-    )
-    parser.add_argument("--no-sim", action="store_true", help="Disable simulated geographic coordinates")
+    parser.add_argument("--no-show", action="store_true", help="Run headless without display")
+    parser.add_argument("--no-sim", action="store_true", help="Disable simulated GPS coordinates")
     parser.add_argument("--sim-lat", type=float, default=None, help="Simulated elephant latitude")
     parser.add_argument("--sim-lon", type=float, default=None, help="Simulated elephant longitude")
     parser.add_argument(
@@ -965,7 +676,7 @@ if __name__ == "__main__":
         type=str,
         default=None,
         choices=[RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_CRITICAL],
-        help="Minimum risk level required to trigger alerts",
+        help="Minimum risk level to trigger alerts",
     )
     args = parser.parse_args()
 

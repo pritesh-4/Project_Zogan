@@ -14,13 +14,13 @@ models/
 
 ## 📋 Model Changelog & Specifications
 
-### 1. `elephant_v1` (Active Production Model)
+### 1. `elephant_v1` (Primary Custom Model — Research / Prototype)
 
 * **Model Name**: `elephant_v1`
-* **Architecture**: YOLO26n (Ultralytics Nano)
+* **Architecture**: YOLO26n (Ultralytics Nano Object Detector)
 * **Base Weights**: `yolo26n.pt` (Pretrained COCO transfer learning)
-* **Parameters**: 2,375,031 parameters | 122 fused layers | 5.3 GFLOPs
-* **Dataset Version**: Phase 3.2 African Wildlife Dataset (456 images, 747 boxes)
+* **Status**: Fine-tuned prototype for evaluation (not certified for unsupervised production deployment)
+* **Dataset Version**: Phase 3.2 African Wildlife Dataset (456 images [315 train / 68 val / 73 test], 747 boxes)
 * **Training Configuration**:
   * Epochs: 15
   * Resolution: $416 \times 416$

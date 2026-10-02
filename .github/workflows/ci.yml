@@ -49,6 +49,10 @@ jobs:
         run: |
           python -c "import torch, cv2, ultralytics, yaml, lap; print('Core dependencies imported successfully!')"
 
+      - name: Run System Health Check
+        run: |
+          python scripts/health_check.py
+
       - name: Run linter (Ruff)
         run: |
           ruff check .

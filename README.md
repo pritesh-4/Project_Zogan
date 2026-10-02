@@ -87,27 +87,33 @@ Project Zogan has implemented a reliable **Alert-Event Logging & Remote Notifica
 ```text
 Elephant_detector/
 │
-├── config.py                 # Central configuration for simulated GPS, zones, and risk thresholds
+├── config.py                 # Central configuration for models, thresholds, GPS, zones, and alerts
+├── elephant_camera.py        # Main real-time detection, tracking & risk orchestrator
 │
-├── alerts/
-│   ├── __init__.py           # Package exports for models, logger, history, telegram, and dispatcher
-│   ├── models.py             # Structured AlertEvent model and factory function (Phase 6)
-│   ├── event_logger.py       # Safe JSON Lines local logger (logs/alerts.jsonl) (Phase 6)
-│   ├── history.py            # Alert querying, filtering, counting, and latest-alert reader (Phase 6)
-│   ├── telegram.py           # Telegram Bot API integration and formatted notifications (Phase 6)
-│   └── dispatcher.py         # Unified fail-safe alert dispatcher (logs locally + Telegram) (Phase 6)
-│
-├── ai/
-│   ├── geofence.py           # Geofencing, Haversine distance, and zone classification (Phase 5)
-│   ├── risk_engine.py        # Rule-based early-warning risk scoring engine (Phase 5)
-│   ├── simulate_risk.py      # Trajectory and approach risk simulation utility (Phase 5)
-│   ├── tracking.py           # Object tracking and movement analysis module (Phase 4)
-│   ├── train.py              # Fine-tuning transfer learning script
-│   ├── evaluate.py           # Model validation, mAP reporting, and test prediction generator
-│   ├── predict_custom.py     # Single-image inference using the custom elephant model
+├── ai/                       # AI core package
+│   ├── __init__.py           # Package initialization and exports
+│   ├── detector.py           # Core detection and class filtering logic
+│   ├── model_manager.py      # Model path resolution, fallback, and validation
+│   ├── renderer.py           # OpenCV bounding box, HUD, trajectory, and alert banner rendering
+│   ├── tracking.py           # ByteTrack tracker, trajectory history, and movement analysis
+│   ├── geofence.py           # Geofencing, Haversine geodesic distance, and zone classification
+│   ├── risk_engine.py        # Rule-based early-warning risk scoring engine
+│   ├── simulate_risk.py      # Trajectory and approach risk simulation utility
+│   ├── train.py              # Transfer learning fine-tuning script
+│   ├── evaluate.py           # Dynamic model evaluation, mAP reporting, and prediction generator
+│   ├── predict_custom.py     # Single-image inference CLI using custom elephant model
 │   ├── compare_models.py     # Side-by-side comparison between baseline and custom models
 │   ├── validate_dataset.py   # Dataset structure and annotation validation utility
 │   └── visualize_dataset.py  # Visual inspection tool for YOLO labels and bounding boxes
+│
+├── alerts/                   # Alerting & notification subsystem
+│   ├── __init__.py           # Package exports for models, logger, history, telegram, and dispatcher
+│   ├── models.py             # Structured AlertEvent model and factory function
+│   ├── event_logger.py       # Safe JSON Lines local logger (logs/alerts.jsonl)
+│   ├── history.py            # Alert querying, filtering, counting, and latest-alert reader
+│   ├── history_cli.py        # Command-line interface for inspecting alert logs
+│   ├── telegram.py           # Telegram Bot API integration and formatted notifications
+│   └── dispatcher.py         # Unified fail-safe alert dispatcher (logs locally + Telegram)
 │
 ├── datasets/
 │   └── elephant/
@@ -120,27 +126,30 @@ Elephant_detector/
 ├── models/
 │   ├── README.md             # Model changelog, deployment specifications, and version guide
 │   └── elephant_v1/
-│       ├── best.pt           # Deployed fine-tuned custom elephant model weights
+│       ├── best.pt           # Fine-tuned custom elephant model weights
 │       └── README.md         # Experiment notes
 │
-├── runs/
-│   └── detect/
-│       └── elephant_v1/      # Full training run artifacts, plots, and MODEL_REPORT.md
+├── scripts/
+│   └── health_check.py       # Real system diagnostic & environment verification script
 │
-├── elephant_camera.py        # Real-time webcam & video tracker with custom model, geofencing, HUD
-├── detect.py                 # Static image detection script
-├── camera.py                 # Basic OpenCV webcam test script
-├── test_phase2.py            # Automated verification test suite for Phase 2
-├── test_phase3_1.py          # Automated verification test suite for Phase 3.1
-├── test_phase3_2.py          # Automated verification test suite for Phase 3.2
-├── test_phase3_4.py          # Automated verification test suite for Phase 3.4
-├── test_phase4.py            # Automated verification test suite for Phase 4
-├── test_phase5.py            # Automated verification test suite for Phase 5
-├── test_phase6.py            # Automated verification test suite for Phase 6 (Logging & Telegram)
+├── tests/
+│   ├── __init__.py           # Tests package initialization
+│   └── test_alerts.py        # Pytest alert subsystem verification suite
+│
+├── test_phase2.py            # Verification test suite for Phase 2 (Persistence & Cooldown)
+├── test_phase3_1.py          # Verification test suite for Phase 3.1 (Dataset Structure)
+├── test_phase3_2.py          # Verification test suite for Phase 3.2 (Data Integrity)
+├── test_phase3_4.py          # Verification test suite for Phase 3.4 (Custom Model Pipeline)
+├── test_phase4.py            # Verification test suite for Phase 4 (ByteTrack Tracking)
+├── test_phase5.py            # Verification test suite for Phase 5 (Geofencing & Risk Engine)
+├── test_phase6.py            # Verification test suite for Phase 6 (Alert Logging & Dispatcher)
+│
 ├── .env.example              # Template for environment variables (Telegram Bot Token & Chat ID)
 ├── elephant.jpg              # Sample test image
 ├── yolo26n.pt                # Pretrained base YOLO model weights
-├── requirements.txt          # Python package dependencies
+├── requirements.txt          # Production dependencies
+├── requirements-dev.txt      # Development & testing dependencies
+├── pyproject.toml            # Project tool configurations (Ruff, Pytest)
 └── README.md                 # Project documentation and roadmap
 ```
 
@@ -204,15 +213,11 @@ python elephant_camera.py
 
 ## 2. Static Image Detection
 
-To run detection on a single image file:
+To run detection on a single image file with annotated visualization:
 
 ```powershell
-python detect.py
+python ai/predict_custom.py elephant.jpg
 ```
-
----
-
----
 
 ## Running the Custom Model
 
@@ -441,53 +446,9 @@ Clearly documented constraints and boundary conditions:
 3. **Tracking IDs are temporary session IDs**: IDs identify tracked objects during the current session only. They do **NOT** represent permanent biological identities of individual elephants.
 4. **Movement speed is not yet real-world speed**: Movement displacement is measured in pixels per frame, not meters per second.
 5. **Pixel movement does not equal physical distance**: Because of perspective distortion, an elephant moving 20 pixels in the background has traveled a much greater physical distance than one moving 20 pixels in the foreground.
-6. **No geographic location is known yet**: The system operates without GPS coordinates, boundary maps, or geofencing zones.
-7. **No risk score exists yet**: Movement direction is not connected to danger or threat levels (e.g. moving "RIGHT" does not imply heading toward a human village).
+6. **No geographic location was known in Phase 4**: Operating purely in pixel coordinates without GPS, boundary maps, or geofences *(addressed in Phase 5 via simulated spatial intelligence)*.
+7. **No risk score existed in Phase 4**: Movement was not connected to threat levels *(addressed in Phase 5 via rule-based risk engine)*.
 8. **The system does not predict elephant behavior**: No behavioral intent, aggression modeling, or herd intention is inferred.
-
----
-
-# 🧪 Development Roadmap
-
-### Phase 1 — Basic Detection
-* [x] Python environment setup
-* [x] Install YOLO & OpenCV
-* [x] Load pretrained model (`yolo26n.pt`)
-* [x] Static image detection (`detect.py`)
-* [x] Understand bounding boxes & confidence scores
-
-### Phase 2 — Real-Time Detection
-* [x] Webcam input integration via OpenCV
-* [x] Real-time YOLO inference pipeline
-* [x] Target class filtering (`TARGET_CLASS = "elephant"`)
-* [x] Configurable confidence threshold (`CONFIDENCE_THRESHOLD = 0.70`)
-* [x] Persistent multi-frame detection counter (`REQUIRED_DETECTIONS = 5`)
-* [x] Detection counter reset logic
-* [x] Alert cooldown rate limiter (`ALERT_COOLDOWN_SECONDS = 30`)
-* [x] Heads-Up Display (HUD) with real-time state, persistence progress, and FPS
-* [x] Non-blocking visual alert banner and timestamped terminal alerts
-* [x] Clean shutdown handling with `Q` key
-
-### Phase 3 — Custom Elephant Model
-* [x] Dataset preparation
-* [x] Dataset validation
-* [x] Custom dataset
-* [x] Annotation
-* [x] Model training
-* [x] Model evaluation
-* [x] Custom model integration
-* [ ] Model improvement (Asian elephants, infrared/night vision, adverse weather)
-
-### Phase 4 — Intelligent Tracking
-* [x] Object tracking (ByteTrack)
-* [x] Track IDs (Temporary session IDs: ELEPHANT #1, #2...)
-* [x] Position history (Bounded to 20 centers)
-* [x] Movement estimation (Image-space: RIGHT, LEFT, UP, DOWN, STATIONARY)
-* [x] Multiple elephant tracking
-* [x] Basic movement HUD & Enhanced alert info
-* [ ] Camera motion compensation
-* [ ] Geographic movement
-* [ ] Risk assessment
 
 ---
 
@@ -674,9 +635,9 @@ Clearly documented constraints and ethical boundaries:
 * [x] Movement estimation (Image-space: RIGHT, LEFT, UP, DOWN, STATIONARY)
 * [x] Multiple elephant tracking
 * [x] Basic movement HUD & Enhanced alert info
+* [x] Geographic movement & approach trend (Implemented in Phase 5)
+* [x] Risk assessment engine (Implemented in Phase 5)
 * [ ] Camera motion compensation
-* [ ] Geographic movement
-* [ ] Risk assessment
 
 ### Phase 5 — GPS, Geofencing & Basic Risk Assessment
 * [x] Geographic utility module (`ai/geofence.py`)
@@ -688,10 +649,10 @@ Clearly documented constraints and ethical boundaries:
 * [x] Rule-based risk engine (LOW, MEDIUM, HIGH, CRITICAL)
 * [x] Simulation mode & test script (`ai/simulate_risk.py`)
 * [x] Risk-aware local alerts & HUD context
-* [ ] Real GPS hardware
+* [x] Remote notification system (Implemented in Phase 6 via Telegram & JSONL)
+* [ ] Real GPS hardware integration
 * [ ] Camera heading calibration
-* [ ] Real-world elephant coordinate estimation
-* [ ] Remote notification system
+* [ ] Real-world elephant coordinate estimation via calibrated depth/ranging sensors
 
 ### Phase 6 — Remote Alerting & Event Logging
 * [x] Alert Event data model (`AlertEvent`, non-fabricated fields)

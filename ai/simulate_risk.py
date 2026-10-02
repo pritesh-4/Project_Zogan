@@ -76,13 +76,16 @@ def run_simulation(
 
     history_records = []
 
+    warning_boundary = config.BUFFER_RADIUS_METERS - config.VILLAGE_RADIUS_METERS
+    forest_boundary = config.FOREST_RADIUS_METERS - config.VILLAGE_RADIUS_METERS
+
     for step, dist in enumerate(distances, start=1):
         # Determine zone by distance to protected zone (village boundary is at 0m)
         if dist <= 0:
             zone = ZONE_TYPE_PROTECTED
-        elif dist <= 500:
+        elif dist <= warning_boundary:
             zone = ZONE_TYPE_WARNING
-        elif dist <= 1200:
+        elif dist <= forest_boundary:
             zone = ZONE_TYPE_MONITORING
         else:
             zone = ZONE_TYPE_OUTSIDE

@@ -134,13 +134,14 @@ def evaluate_model(
     print("\n" + "=" * 60)
     print("CUSTOM ELEPHANT MODEL EVALUATION SUMMARY")
     print("-" * 60)
-    print("VALIDATION SPLIT (68 images):")
+    print("VALIDATION SPLIT:")
     print(f"  • Precision : {val_p:.4f} ({val_p * 100:.1f}%)")
     print(f"  • Recall    : {val_r:.4f} ({val_r * 100:.1f}%)")
     print(f"  • mAP50     : {val_map50:.4f} ({val_map50 * 100:.1f}%)")
     print(f"  • mAP50-95  : {val_map:.4f} ({val_map * 100:.1f}%)")
     print("")
-    print("TEST SPLIT (73 unseen images):")
+    print("TEST SPLIT (unseen images):")
+
     print(f"  • Precision : {test_p:.4f} ({test_p * 100:.1f}%)")
     print(f"  • Recall    : {test_r:.4f} ({test_r * 100:.1f}%)")
     print(f"  • mAP50     : {test_map50:.4f} ({test_map50 * 100:.1f}%)")
@@ -214,8 +215,7 @@ def generate_model_report(
 ## 1. Model & Architecture
 * **Base Architecture**: YOLO26n (Ultralytics Nano Object Detector)
 * **Pretrained Weights**: `yolo26n.pt` (COCO Transfer Learning)
-* **Parameters**: 2,375,031
-* **Layers**: 122 (fused)
+* **Note**: Parameter count and layer count are reported in training logs
 * **Target Classes**: 1 (`0 = elephant`)
 
 ---

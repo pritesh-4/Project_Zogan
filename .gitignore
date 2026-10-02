@@ -1,3 +1,7 @@
+# =============================================================================
+# 🐘 PROJECT ZOGAN — GIT IGNORE RULES
+# =============================================================================
+
 # Environments & Virtual Environments
 venv/
 .venv/
@@ -33,14 +37,23 @@ wheels/
 htmlcov/
 .mypy_cache/
 
-# Training runs & model outputs (keep models/ folder tracked)
+# Training runs & experiment outputs (regenerable artifacts)
 runs/
-*.log
 
-# Runtime alert event logs
+# YOLO dataset cache files (auto-generated during training/validation)
+*.cache
+
+# Runtime alert event logs (generated at runtime)
 logs/*.jsonl
 *.jsonl
 !logs/.gitkeep
+
+# Generated prediction/comparison images (output artifacts)
+predicted_*.jpg
+comparison_*.jpg
+test_output_*.jpg
+*_hud_preview.jpg
+*_tracking_preview.jpg
 
 # Sensitive credentials & environment variables
 .env
@@ -62,3 +75,6 @@ credentials.json
 *.swo
 .DS_Store
 Thumbs.db
+
+# Log files
+*.log
