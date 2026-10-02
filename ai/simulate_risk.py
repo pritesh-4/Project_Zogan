@@ -36,9 +36,16 @@ from ai.risk_engine import (
     MovementTrendTracker,
     RISK_CRITICAL,
 )
+from alerts import create_alert_event, dispatch_alert
 
 
-def run_simulation(scenario: str = "approach", group_size: int = 1, confidence: float = 0.95):
+def run_simulation(
+    scenario: str = "approach",
+    group_size: int = 1,
+    confidence: float = 0.95,
+    log_events: bool = False,
+    log_file: str = None,
+):
     print("=" * 75)
     print("🐘 PROJECT ZOGAN — GEOFENCING & RISK SIMULATION (PHASE 5)")
     print(f"Scenario:    {scenario.upper()}")
@@ -96,6 +103,17 @@ def run_simulation(scenario: str = "approach", group_size: int = 1, confidence: 
         if assessment.level == RISK_CRITICAL:
             action = "🚨 EMERGENCY ALARM"
 
+        event_info = None
+        if log_events and assessment.alert_recommended:
+            ev = create_alert_event(
+                confidence=confidence,
+                risk_info=assessment.to_dict(),
+                simulation_mode=True,
+            )
+            disp = dispatch_alert(ev, log_file=log_file, send_telegram=True, verbose=False)
+            action += f" -> [LOGGED {ev.event_id}]"
+            event_info = disp
+
         print(
             f"{step:<6} | {dist:<9.0f} | {zone:<10} | {trend:<12} | "
             f"{assessment.score:<7} | {assessment.level:<10} | {action}"
@@ -110,6 +128,7 @@ def run_simulation(scenario: str = "approach", group_size: int = 1, confidence: 
                 "score": assessment.score,
                 "level": assessment.level,
                 "alert": assessment.alert_recommended,
+                "dispatch": event_info,
             }
         )
 
@@ -128,6 +147,14 @@ if __name__ == "__main__":
     )
     parser.add_argument("--group-size", type=int, default=1, help="Number of elephants in group")
     parser.add_argument("--conf", type=float, default=0.95, help="Detection confidence (0.0 - 1.0)")
+    parser.add_argument("--log-events", action="store_true", help="Log alert events to JSONL during simulation")
+    parser.add_argument("--log-file", type=str, default=None, help="Custom JSONL log file destination")
     args = parser.parse_args()
 
-    run_simulation(scenario=args.scenario, group_size=args.group_size, confidence=args.conf)
+    run_simulation(
+        scenario=args.scenario,
+        group_size=args.group_size,
+        confidence=args.conf,
+        log_events=args.log_events,
+        log_file=args.log_file,
+    )

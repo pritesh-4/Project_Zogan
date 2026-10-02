@@ -92,6 +92,7 @@ jobs:
       - name: Run Phase 6 tests (Alert Event Logging & Telegram Dispatcher)
         run: |
           python test_phase6.py
+          python -m pytest tests/test_alerts.py
 
       - name: Run Risk Simulation scenario
         run: |

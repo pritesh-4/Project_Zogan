@@ -15,11 +15,18 @@ Architectural Flow:
       ↓
   Local log (logs/alerts.jsonl)
       ↓
-  Telegram (if configured)
+  Telegram (if configured & alert level >= threshold)
+
+Alert-Level Policy:
+  LOW:      log only
+  MEDIUM:   log only (local warning)
+  HIGH:     log + local alert + Telegram (if configured)
+  CRITICAL: log + local alert + Telegram (if configured)
 
 Pipeline Reliability Requirements:
   1. Record the incident locally in logs/alerts.jsonl.
-  2. Attempt remote notification via Telegram if credentials are set.
+  2. Attempt remote notification via Telegram if credentials are set and
+     the event satisfies the configured alert-level threshold.
   3. NEVER crash the camera/detection pipeline if logging or Telegram fails.
 =============================================================================
 """
@@ -31,12 +38,24 @@ from alerts.event_logger import log_alert
 from alerts.models import AlertEvent
 from alerts.telegram import is_telegram_configured, send_telegram_alert
 
+# Numeric priority mapping for alert levels
+LEVEL_PRIORITY: Dict[str, int] = {
+    "LOW": 1,
+    "MEDIUM": 2,
+    "HIGH": 3,
+    "CRITICAL": 4,
+}
+
+DEFAULT_MIN_TELEGRAM_LEVEL: str = "HIGH"
+
 
 def dispatch_alert(
     event: Union[AlertEvent, Dict[str, Any]],
     log_file: Optional[Union[str, Path]] = None,
     send_telegram: bool = True,
+    min_telegram_level: str = DEFAULT_MIN_TELEGRAM_LEVEL,
     timeout: float = 10.0,
+    verbose: bool = True,
 ) -> Dict[str, Any]:
     """
     Unified entry point to process and dispatch a confirmed alert event.
@@ -44,11 +63,11 @@ def dispatch_alert(
     Steps:
       1. Normalize the event into an AlertEvent object.
       2. Record event locally to JSONL file (creates directory safely).
-      3. Attempt remote notification via Telegram if credentials are set.
-      4. Return a structured dispatch result summary.
+      3. Evaluate alert-level policy (default: HIGH & CRITICAL trigger Telegram).
+      4. Attempt remote notification via Telegram if configured and allowed.
+      5. Return a structured dispatch result summary.
 
-    This function is guaranteed to catch internal exceptions and never crash
-    the caller or detection loop.
+    Guaranteed fail-safe; never crashes the caller or detection loop.
     """
     # 1. Normalize input event
     alert_obj: AlertEvent
@@ -59,8 +78,14 @@ def dispatch_alert(
     else:
         alert_obj = AlertEvent()
 
+    event_level = (alert_obj.alert_level or alert_obj.risk_level or "HIGH").upper()
+    event_priority = LEVEL_PRIORITY.get(event_level, 3)
+    min_priority = LEVEL_PRIORITY.get(min_telegram_level.upper(), 3)
+
     result: Dict[str, Any] = {
         "event_id": alert_obj.event_id,
+        "alert_level": event_level,
+        "risk_level": event_level,
         "logged": False,
         "log_error": None,
         "telegram_configured": False,
@@ -70,17 +95,23 @@ def dispatch_alert(
         "telegram_error": None,
     }
 
-    # 2. Local Event Logging
+    # 2. Local Event Logging (logs/alerts.jsonl)
     try:
         logged_record = log_alert(alert_obj, log_file=log_file)
         result["logged"] = True
         result["logged_record"] = logged_record
     except Exception as e:
         result["log_error"] = str(e)
-        print(f"[ALERT LOGGER ERROR] Failed to record alert locally: {e}")
+        if verbose:
+            print(f"[ALERT LOGGER ERROR] Failed to record alert locally: {e}")
 
-    # 3. Remote Telegram Dispatch
-    if send_telegram:
+    # 3. Remote Telegram Dispatch Policy
+    if not send_telegram:
+        result["telegram_status"] = "disabled"
+    elif event_priority < min_priority:
+        # Policy: LOW/MEDIUM are logged locally without remote notification
+        result["telegram_status"] = "skipped_level_threshold"
+    else:
         try:
             telegram_ready = is_telegram_configured()
             result["telegram_configured"] = telegram_ready
@@ -92,16 +123,25 @@ def dispatch_alert(
                 result["telegram_status"] = tele_res.get("status", "unknown")
                 if not tele_res.get("success"):
                     result["telegram_error"] = tele_res.get("error")
-                    print(f"[TELEGRAM WARNING] Remote alert failed: {tele_res.get('error')}")
-                else:
-                    print(f"[TELEGRAM] Remote alert successfully dispatched for Event {alert_obj.event_id}.")
             else:
-                result["telegram_status"] = "skipped_not_configured"
+                result["telegram_status"] = "disabled"
         except Exception as e:
-            result["telegram_status"] = "exception"
+            result["telegram_status"] = "failed"
             result["telegram_error"] = str(e)
-            print(f"[TELEGRAM EXCEPTION] Unexpected error during Telegram dispatch: {e}")
-    else:
-        result["telegram_status"] = "disabled"
+
+    # 4. Observability Terminal Output
+    if verbose:
+        status_tag = result["telegram_status"].upper()
+        if result["telegram_sent"]:
+            tele_display = "SENT"
+        elif result["telegram_status"] == "disabled":
+            tele_display = "DISABLED"
+        elif result["telegram_status"] == "skipped_level_threshold":
+            tele_display = f"SKIPPED (Level {event_level} < {min_telegram_level})"
+        else:
+            err_info = f" — {result.get('telegram_error')}" if result.get("telegram_error") else ""
+            tele_display = f"FAILED ({status_tag}{err_info})"
+
+        print(f"[ALERT DISPATCHED] Event ID: {alert_obj.event_id} | Level: {event_level} | Telegram: {tele_display}")
 
     return result

@@ -10,7 +10,14 @@ services for Project Zogan.
 
 from alerts.dispatcher import dispatch_alert
 from alerts.event_logger import AlertEventLogger, log_alert
-from alerts.history import count_alerts, filter_by_risk, get_latest_alert, load_alerts
+from alerts.history import (
+    count_alerts,
+    filter_by_risk,
+    get_alert_count,
+    get_latest_alert,
+    get_recent_alerts,
+    load_alerts,
+)
 from alerts.models import AlertEvent, create_alert_event
 from alerts.telegram import (
     format_telegram_message,
@@ -26,7 +33,9 @@ __all__ = [
     "AlertEventLogger",
     "log_alert",
     "load_alerts",
+    "get_recent_alerts",
     "count_alerts",
+    "get_alert_count",
     "get_latest_alert",
     "filter_by_risk",
     "format_telegram_message",

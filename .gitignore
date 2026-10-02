@@ -38,8 +38,9 @@ runs/
 *.log
 
 # Runtime alert event logs
-logs/
+logs/*.jsonl
 *.jsonl
+!logs/.gitkeep
 
 # Sensitive credentials & environment variables
 .env

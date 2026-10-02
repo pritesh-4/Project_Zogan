@@ -406,7 +406,7 @@ def test_unified_dispatcher():
             dispatch_result = dispatch_alert(event, log_file=log_path)
             assert dispatch_result["logged"] is True
             assert dispatch_result["telegram_configured"] is False
-            assert dispatch_result["telegram_status"] == "skipped_not_configured"
+            assert dispatch_result["telegram_status"] in ("disabled", "skipped_not_configured")
 
         # Verify event was written to JSONL
         records = load_alerts(log_file=log_path)
