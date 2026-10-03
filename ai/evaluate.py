@@ -192,6 +192,51 @@ def evaluate_model(
     }
 
 
+def _count_images(images_dir: Path, split: str) -> int:
+    """Counts .jpg images in a dataset split directory."""
+    split_dir = images_dir / split
+    if split_dir.is_dir():
+        return len(list(split_dir.glob("*.jpg")))
+    return 0
+
+
+def _count_annotation_boxes(labels_dir: Path) -> int:
+    """Counts total annotation boxes across all .txt label files."""
+    total = 0
+    for split in ("train", "val", "test"):
+        split_dir = labels_dir / split
+        if not split_dir.is_dir():
+            continue
+        for label_file in split_dir.glob("*.txt"):
+            try:
+                lines = label_file.read_text(encoding="utf-8").strip().splitlines()
+                total += len([ln for ln in lines if ln.strip()])
+            except Exception:
+                continue
+    return total
+
+
+def _count_background_images(images_dir: Path, labels_dir: Path, split: str) -> int:
+    """Counts images that have empty or missing label files (negative/background samples)."""
+    img_dir = images_dir / split
+    lbl_dir = labels_dir / split
+    if not img_dir.is_dir():
+        return 0
+    count = 0
+    for img_file in img_dir.glob("*.jpg"):
+        lbl_file = lbl_dir / (img_file.stem + ".txt")
+        if not lbl_file.exists():
+            count += 1
+        else:
+            try:
+                content = lbl_file.read_text(encoding="utf-8").strip()
+                if not content:
+                    count += 1
+            except Exception:
+                pass
+    return count
+
+
 def generate_model_report(
     report_path: Path,
     weights_path: Path,
@@ -203,6 +248,21 @@ def generate_model_report(
 ):
     """Compiles the complete MODEL_REPORT.md document."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Dynamically count dataset contents
+    dataset_root = data_path.parent
+    images_dir = dataset_root / "images"
+    labels_dir = dataset_root / "labels"
+
+    n_train = _count_images(images_dir, "train")
+    n_val = _count_images(images_dir, "val")
+    n_test = _count_images(images_dir, "test")
+    n_total = n_train + n_val + n_test
+    n_boxes = _count_annotation_boxes(labels_dir)
+
+    bg_train = _count_background_images(images_dir, labels_dir, "train")
+    bg_val = _count_background_images(images_dir, labels_dir, "val")
+    bg_test = _count_background_images(images_dir, labels_dir, "test")
 
     content = f"""# 🐘 Project Zogan — Model Evaluation Report
 ### Experiment: `elephant_v1`
@@ -221,11 +281,11 @@ def generate_model_report(
 ---
 
 ## 2. Dataset Distribution
-* **Total Dataset Images**: 456
-* **Training Set**: 315 images (271 positive with elephants, 44 negative backgrounds)
-* **Validation Set**: 68 images (53 positive, 15 negative backgrounds)
-* **Held-Out Test Set**: 73 images (58 positive, 15 negative backgrounds)
-* **Total Ground-Truth Elephant Annotations**: 747 boxes
+* **Total Dataset Images**: {n_total}
+* **Training Set**: {n_train} images ({n_train - bg_train} positive with elephants, {bg_train} negative backgrounds)
+* **Validation Set**: {n_val} images ({n_val - bg_val} positive, {bg_val} negative backgrounds)
+* **Held-Out Test Set**: {n_test} images ({n_test - bg_test} positive, {bg_test} negative backgrounds)
+* **Total Ground-Truth Elephant Annotations**: {n_boxes} boxes
 
 ---
 
