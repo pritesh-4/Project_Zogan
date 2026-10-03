@@ -1,96 +1,232 @@
-# 🐘 Elephant Detector
+# Project Zogan
 
-> **An AI-powered real-time elephant detection and early-warning system.**
+> An AI-assisted wildlife monitoring prototype for elephant detection, multi-target tracking, simulated geofenced risk assessment, and automated incident alerting.
 
-Elephant Detector is an AI/computer-vision project designed to detect elephants from images and live camera feeds using **YOLO object detection**.
-
-The initial goal is simple:
-
-**Camera → AI Detection → Confidence Filter → Persistence Verification → Cooldown Alert**
-
-The project is being developed incrementally, starting with a software-only prototype and eventually evolving toward an edge-AI system capable of operating in real-world environments.
+[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue.svg)](https://www.python.org/)
+[![CI Status](https://github.com/pritesh-4/Project_Z-gan/actions/workflows/ci.yml/badge.svg)](https://github.com/pritesh-4/Project_Z-gan/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-81%20passed-brightgreen.svg)](tests/)
+[![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Dataset](https://img.shields.io/badge/dataset-456%20images%20%7C%20AGPL--3.0-orange.svg)](datasets/elephant/)
 
 ---
 
-## 🚨 Why This Project?
+## Table of Contents
 
-Human-elephant conflict is a serious problem in many regions where forests and human settlements overlap.
+- [Overview](#overview)
+- [Problem Context](#problem-context)
+- [System Goals](#system-goals)
+- [Current Capabilities](#current-capabilities)
+- [Hardware vs. Software Reality](#hardware-vs-software-reality)
+- [System Architecture](#system-architecture)
+- [Technology Stack](#technology-stack)
+- [Repository Structure](#repository-structure)
+- [Installation & Environment Setup](#installation--environment-setup)
+- [Quick Start & Usage](#quick-start--usage)
+- [Machine Learning & Computer Vision Pipeline](#machine-learning--computer-vision-pipeline)
+- [Multi-Object Tracking & Motion Analysis](#multi-object-tracking--motion-analysis)
+- [Geofencing & Spatial Risk Engine](#geofencing--spatial-risk-engine)
+- [Alerting & Incident Logging Subsystem](#alerting--incident-logging-subsystem)
+- [Configuration Reference](#configuration-reference)
+- [Testing & Quality Assurance](#testing--quality-assurance)
+- [Limitations & Honest Engineering Constraints](#limitations--honest-engineering-constraints)
+- [Roadmap & Future Work](#roadmap--future-work)
+- [Contributing](#contributing)
+- [License & Acknowledgments](#license--acknowledgments)
 
-A traditional camera can capture an elephant, but it cannot automatically understand what it sees.
+---
 
-This project adds an AI layer:
+## Overview
 
-```text
-📷 Camera
-   ↓
-🤖 Computer Vision (YOLO)
-   ↓
-🐘 Elephant Detected
-   ↓
-📊 Confidence & Persistence Filter
-   ↓
-🚨 Warning / Alert (With Cooldown)
+**Project Zogan** is an open-source engineering and research prototype designed to evaluate computer vision, multi-target tracking, and rule-based spatial risk modeling for wildlife monitoring along forest-village fringes. Its primary objective is to detect elephants in monocular video feeds, verify detection persistence across consecutive frames, estimate motion trajectories, calculate proximity to defined safety perimeters, and dispatch structured alert events.
+
+The project is structured as a modular Python pipeline that bridges deep learning inference (Ultralytics YOLO) with spatial evaluation (Haversine geodesic math) and multi-channel alerting (atomic JSON Lines event logs and asynchronous Telegram notifications).
+
+```
+Visual Input (Camera / Video)
+           │
+           ▼
+  YOLO Elephant Detector (Custom elephant_v1 / COCO Baseline)
+           │
+           ▼
+  Temporal Persistence Gate (>= 5 Consecutive Frames)
+           │
+           ▼
+  ByteTrack Multi-Object Tracker (Session ID + Centroid Trail)
+           │
+           ▼
+  Spatial & Geofence Engine (Haversine Distance + Zone Classification)
+           │
+           ▼
+  Rule-Based Risk Engine (LOW / MEDIUM / HIGH / CRITICAL)
+           │
+           ▼
+  Unified Alert Dispatcher ──► Local Event Log (logs/alerts.jsonl)
+                           └──► Telegram Bot API (Remote Alerts)
 ```
 
-The long-term vision is to create an intelligent monitoring system that can detect elephants early and provide timely warnings to people in potentially affected areas.
+> **Engineering Status**: Project Zogan is currently a **software-only research prototype and field evaluation platform**. It is **not** an autonomous life-safety system, certified perimeter defense product, or field-hardened hardware appliance. All geographic coordinates and animal distances are currently simulated in software unless integrated with calibrated ranging sensors.
 
 ---
 
-# 🎯 Current Status: Phase 6 Complete (Event Logging + Remote Alert System)
+## Problem Context
 
-Project Zogan has implemented a reliable **Alert-Event Logging & Remote Notification System**. Every confirmed incident produces a structured, un-fabricated `AlertEvent` recorded locally in JSON Lines (`logs/alerts.jsonl`), queryable via an alert history module, and remotely dispatched through the **Telegram Bot API** with fail-safe error isolation.
+Human-elephant conflict (HEC) is an escalating conservation and humanitarian challenge across agricultural frontiers and wildlife migration corridors. Crop raiding, property damage, and dangerous encounters frequently occur when herds exit protected reserves into human settlements.
 
-### Phase 6 Architecture Pipeline
+Traditional monitoring approaches face fundamental operational bottlenecks:
+- **Passive Camera Traps**: Capture high-resolution records but operate offline, requiring physical memory card retrieval and offering zero real-time warning value.
+- **Manual Patrols**: Expensive, dangerous during nighttime hours, and unable to maintain continuous 360-degree observation.
+- **Single-Frame Computer Vision**: Standard object detectors produce transient false positives from optical occlusion, motion blur, and background clutter, causing alarm fatigue if wired directly to sirens or notification channels.
 
-```text
-                  📷 CAMERA / VIDEO REPLAY
-                             ↓
-             🤖 CUSTOM YOLO MODEL (elephant_v1)
-                             ↓
-            🐘 ELEPHANT DETECTION (conf >= 0.70)
-                             ↓
-                   🎯 BYTETRACK TRACKER
-                             ↓
-                  🏷️ TRACK ID (#1, #2...)
-                             ↓
-             📈 POSITION HISTORY & IMAGE MOVEMENT
-                             ↓
-            🗺️ GEOFENCING & ZONE CLASSIFICATION
-               (Village / Buffer / Forest / Outside)
-                             ↓
-                 🧭 APPROACH TREND TRACKING
-               (APPROACHING / RECEDING / STABLE)
-                             ↓
-                 ⚖️ RULE-BASED RISK ENGINE
-               (LOW / MEDIUM / HIGH / CRITICAL)
-                             ↓
-         🖥️ HUD WITH GEO CONTEXT & RISK-AWARE ALERTS
+Project Zogan addresses these issues at a software architecture level:
+1. **Multi-Frame Verification**: Requires $N$ consecutive positive frames before confirming an incident.
+2. **Contextual Risk Evaluation**: Evaluates not merely detection, but spatial proximity, approach vectors, and herd group size.
+3. **Structured Incident Records**: Emits machine-readable event objects with auditable metadata rather than unformatted messages.
+
+---
+
+## System Goals
+
+| Goal | Engineering Focus | Implementation Status |
+|:---|:---|:---|
+| **Elephant Detection** | Detect elephants from RGB video and still imagery using specialized deep learning. | Implemented (`ai/detector.py`, `models/elephant_v1/best.pt`) |
+| **Persistence Filtering** | Prevent transient false alarms by requiring consecutive positive detection frames. | Implemented (`config.REQUIRED_DETECTIONS = 5`) |
+| **Multi-Object Tracking** | Maintain persistent session IDs and historical trajectories across video frames. | Implemented via ByteTrack (`ai/tracking.py`) |
+| **Movement Analysis** | Estimate 2D image-space velocity vectors with deadband jitter suppression. | Implemented (`DIRECTION_RIGHT`, `LEFT`, `UP`, `DOWN`) |
+| **Geofenced Risk Assessment** | Calculate geodesic distance to protected settlements and classify risk levels. | Implemented in software simulation (`ai/geofence.py`, `ai/risk_engine.py`) |
+| **Multi-Channel Alerting** | Record audit records locally and dispatch remote alerts with fail-safe error isolation. | Implemented (`alerts/event_logger.py`, `alerts/telegram.py`) |
+| **Rigorous Testing & CI** | Ensure mathematical and operational correctness via automated quality gates. | Implemented (81 tests passing, Ruff linting, GitHub Actions CI) |
+
+---
+
+## Current Capabilities
+
+| Component | Status | Description | Implementation Details |
+|:---|:---:|:---|:---|
+| **YOLO Elephant Detection** | **Implemented** | Single-class elephant detection using custom weights and fallback COCO baseline. | `ai/detector.py`, `ai/model_manager.py` |
+| **Custom Model (`elephant_v1`)** | **Implemented** | Fine-tuned YOLO26n model trained on 456 images with background negative samples. | `models/elephant_v1/best.pt` (mAP@50: 88.2%) |
+| **Image CLI Detection** | **Implemented** | Standalone command-line inference tool for single images with annotated outputs. | `scripts/detect_image.py`, `ai/predict_custom.py` |
+| **Real-Time Video Orchestrator** | **Implemented** | Multi-threaded video loop supporting webcams, RTSP streams, and local video files. | `scripts/run_camera.py` |
+| **Object Tracking (ByteTrack)** | **Implemented** | Two-stage bipartite matching using LAP linear assignment solver for session tracking. | `ai/tracking.py` (via `lap`) |
+| **Image-Space Motion Analysis** | **Implemented** | Rolling window centroid tracking with 10px deadband anti-jitter filtering. | `ai/tracking.py` |
+| **Geofencing Engine** | **Implemented** | Great-circle Haversine geodesic distance calculation and concentric/polygon zone classification. | `ai/geofence.py` |
+| **Rule-Based Risk Engine** | **Implemented** | Multi-factor risk scoring (0–100) factoring zone, distance, approach trend, and herd size. | `ai/risk_engine.py` |
+| **Spatial Drift Simulation** | **Simulated** | Dynamic coordinate drift and course adjustment to test geofence transitions without GPS hardware. | `scripts/run_camera.py`, `ai/simulate_risk.py` |
+| **Local JSONL Event Logger** | **Implemented** | Thread-safe, atomic, append-only incident logging to structured JSON Lines. | `alerts/event_logger.py` (`logs/alerts.jsonl`) |
+| **Telegram Remote Alerting** | **Implemented** | Asynchronous HTTP Bot API delivery with non-blocking error recovery and zero pipeline crashes. | `alerts/telegram.py`, `alerts/dispatcher.py` |
+| **Alert History CLI** | **Implemented** | Terminal viewer for filtering, querying, and inspecting historical alert incidents. | `alerts/history_cli.py` |
+| **Hardware GPS / Telemetry** | **Planned** | Direct NMEA serial GPS integration, PTZ control, or laser ranging sensors. | Not implemented (currently simulated) |
+| **Thermal / Infrared Imaging** | **Planned** | Multispectral sensor support for zero-lux night-time monitoring. | Not implemented (RGB daytime only) |
+
+---
+
+## Hardware vs. Software Reality
+
+To maintain strict technical transparency, the table below delineates what runs as real software versus what is simulated or experimental:
+
+| Subsystem | Operational Reality | Technical Details & Limitations |
+|:---|:---:|:---|
+| **Computer Vision** | **Real** | Uses PyTorch and Ultralytics YOLO26n. Processes real pixel buffers from cameras or video files. |
+| **Object Tracking** | **Real** | Executes real ByteTrack bipartite matching via the LAP solver on image bounding boxes. |
+| **Camera GPS Coordinates** | **Configured / Demo** | Static demo coordinates configured in `config/settings.py` (e.g., `20.123456, 85.123456`). |
+| **Elephant GPS Coordinates** | **Simulated** | **A monocular 2D camera cannot compute real-world GPS coordinates.** Elephant coordinates are simulated via dynamic software drift. Camera GPS $\neq$ Elephant GPS. |
+| **Geofence Distance** | **Simulated Input, Real Math** | The geodesic distance formula (Haversine WGS84) is mathematically real, but its input coordinates are currently simulated. |
+| **Risk Assessment Engine** | **Experimental Heuristic** | Deterministic, rule-based decision support logic. **Not** a biologically validated animal behavior model. An elephant is not inherently dangerous simply because it exists. |
+| **Alert Event Logging** | **Real** | Writes real, un-fabricated `AlertEvent` objects to `logs/alerts.jsonl`. |
+| **Telegram Alert Dispatcher** | **Real** | Makes real HTTPS requests to `api.telegram.org` using user-provided bot tokens. Fails gracefully if offline. |
+
+---
+
+## System Architecture
+
+The pipeline processes visual input through six distinct functional layers, ensuring loose coupling and testability:
+
+```mermaid
+graph TD
+    subgraph InputLayer ["1. Visual Input Layer"]
+        CAM["Live Camera (Webcam / USB / RTSP)"] --> ORCH
+        VID["Recorded Video File (.mp4 / .avi)"] --> ORCH
+        IMG["Static Image (.jpg / .png)"] --> DETCLI["scripts/detect_image.py"]
+    end
+
+    subgraph DetectionLayer ["2. Detection & Model Management"]
+        ORCH["scripts/run_camera.py"] --> MM["ai.model_manager"]
+        MM -->|"Resolve Priority"| DET["ai.detector.Detector"]
+        DET -->|"Load"| WTS["models/elephant_v1/best.pt<br/>(Fallback: models/yolo26n.pt)"]
+        DET -->|"BBoxes + Conf"| FILT{"Confidence Gate<br/>(conf >= 0.70)"}
+        FILT -->|"Pass"| PERS{"Persistence Gate<br/>(>= 5 Consecutive Frames)"}
+    end
+
+    subgraph TrackingLayer ["3. Multi-Object Tracking & Motion"]
+        PERS -->|"Detections"| TRK["ai.tracking.ElephantTracker"]
+        TRK -->|"Bipartite Matching"| LAP["LAP / ByteTrack"]
+        TRK --> HIST["Bounded Centroid History<br/>(Max 20 Points)"]
+        HIST --> MOT["Image-Space Direction<br/>(RIGHT / LEFT / UP / DOWN / STATIC)"]
+    end
+
+    subgraph SpatialLayer ["4. Geofencing & Risk Engine"]
+        ORCH --> SIM["Simulated Coordinate Drift<br/>(Camera GPS != Elephant GPS)"]
+        SIM --> GEO["ai.geofence.GeoZone"]
+        GEO -->|"Haversine Distance"| ZON["Zone Classification<br/>(VILLAGE / BUFFER / FOREST)"]
+        ZON --> RISK["ai.risk_engine.RiskEngine"]
+        MOT --> RISK
+        RISK --> EVAL["Risk Score (0–100)<br/>Level: LOW / MEDIUM / HIGH / CRITICAL"]
+    end
+
+    subgraph RenderLayer ["5. Visualization & HUD"]
+        ORCH --> REN["ai.renderer"]
+        REN --> HUD["Responsive Status HUD<br/>(FPS, Model, State, Geo Mode)"]
+        REN --> BOX["Target Bounding Boxes & Trajectory Polyline"]
+        REN --> BAN["Emergency Banner Display"]
+    end
+
+    subgraph AlertLayer ["6. Alert & Event Subsystem"]
+        ORCH --> GATE{"Alert Gate<br/>(Cooldown: 30s & Risk >= HIGH)"}
+        GATE -->|"Confirmed"| DISP["alerts.dispatcher.dispatch_alert"]
+        DISP -->|"Atomic Append"| LOG["alerts.event_logger<br/>(logs/alerts.jsonl)"]
+        DISP -->|"HTTPS Async"| TG["alerts.telegram<br/>(Telegram Bot API)"]
+    end
 ```
 
+### Module Responsibilities
+
+- **`scripts/run_camera.py`**: Main orchestrator. Captures video frames, coordinates inference, updates tracking, evaluates spatial drift, renders the HUD, and triggers alerts.
+- **`ai/detector.py`**: Model abstraction layer encapsulating YOLO loading and inference into clean `Detection` dataclasses.
+- **`ai/model_manager.py`**: Centralized resolution hierarchy: explicit user override $\to$ fine-tuned `elephant_v1` $\to$ fallback training checkpoint $\to$ pretrained COCO baseline.
+- **`ai/tracking.py`**: Multi-object ByteTrack tracker maintaining bounding box centroids, session track IDs, and image-space motion vectors.
+- **`ai/geofence.py`**: Great-circle Haversine calculations and point-in-zone boundary algorithms for circular and polygonal geofences.
+- **`ai/risk_engine.py`**: Multi-factor heuristic risk scoring engine calculating an integer score ($0\text{--}100$) mapped to operational levels.
+- **`ai/renderer.py`**: OpenCV drawing routines for bounding boxes, movement labels, trajectory paths, responsive HUD, and alert banners.
+- **`alerts/dispatcher.py`**: Unified entrypoint routing confirmed events to local disk logs and remote messaging services.
+- **`alerts/event_logger.py`**: Thread-safe atomic JSON Lines file writer (`logs/alerts.jsonl`).
+- **`alerts/telegram.py`**: Fail-safe Telegram Bot API client with environment credential loading and formatting.
+
 ---
 
-# 🧠 Technology Stack
+## Technology Stack
 
-## Core AI & Libraries
-
-* **Python 3.10+**
-* **Ultralytics YOLO** (Object detection inference & ByteTrack tracking)
-* **OpenCV (`opencv-python`)** (Video stream capture, HUD rendering, and UI display)
-* **PyTorch** (Deep learning backend)
-* **Lap (`lap`)** (Linear assignment solver for ByteTrack bipartite matching)
-* **Math (Standard Library)** (Haversine geodesic distance and spherical trigonometry)
+| Layer | Technology | Version | Purpose |
+|:---|:---|:---|:---|
+| **Runtime** | Python | 3.10 / 3.11 | Primary language runtime across development and CI |
+| **Deep Learning** | PyTorch | $\ge 2.0.0$ | Deep learning computation and tensor execution engine |
+| **Object Detection** | Ultralytics YOLO | $\ge 8.0.0$ | YOLO26n architecture, fine-tuning, and inference |
+| **Computer Vision** | OpenCV (`opencv-python`) | $\ge 4.8.0$ | Video frame capture, color conversions, and HUD rendering |
+| **Tracking Solver** | `lap` | $\ge 0.5.12$ | Linear Assignment Problem solver for ByteTrack bipartite matching |
+| **Configuration** | PyYAML | $\ge 6.0$ | Dataset definition parsing and zone configuration |
+| **Testing** | Pytest | $\ge 8.0.0$ | Automated test suite execution |
+| **Code Quality** | Ruff | $\ge 0.4.0$ | Ultra-fast Python linter and code formatter |
+| **CI / CD** | GitHub Actions | Ubuntu Latest | Continuous integration, secret scanning, and automated verification |
 
 ---
 
-# 📁 Project Structure
+## Repository Structure
 
 ```text
 Elephant_detector/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # GitHub Actions continuous integration pipeline
+│       └── ci.yml                 # GitHub Actions automated test & lint pipeline
 │
-├── ai/                            # AI/ML core detection, tracking, spatial, and training modules
+├── ai/                            # AI/ML core detection, tracking, spatial & training modules
 │   ├── __init__.py                # Package exports and module definitions
 │   ├── compare_models.py          # Side-by-side inference comparison utility
 │   ├── detector.py                # Detector abstraction and dataclass interfaces
@@ -129,12 +265,12 @@ Elephant_detector/
 │       ├── metadata.json          # Dataset manifest and split provenance
 │       └── README.md              # Dataset documentation and YOLO annotation guide
 │
-├── docs/                          # Comprehensive project documentation
+├── docs/                          # Comprehensive technical documentation
 │   ├── ARCHITECTURE.md            # System architecture and engineering specifications
 │   ├── AUDIT_REPORT.md            # Comprehensive engineering audit report
 │   ├── CHANGELOG.md               # Version changelog and migration notes
 │   ├── CONTRIBUTING.md            # Contributor guidelines and quality standards
-│   └── PROJECT_STRUCTURE.md       # Repository layout and module responsibilities
+│   └── PROJECT_STRUCTURE.md       # Detailed repository layout and module responsibilities
 │
 ├── logs/                          # Runtime log directories
 │   ├── .gitkeep                   # Directory placeholder
@@ -169,663 +305,542 @@ Elephant_detector/
 ├── .env.example                   # Environment variable template for credentials
 ├── .gitignore                     # Git exclusion rules
 ├── pyproject.toml                 # Tool configurations (Ruff, Pytest)
-├── README.md                      # Primary project overview and quickstart guide
 ├── requirements.txt               # Runtime production dependencies
 └── requirements-dev.txt           # Testing and development dependencies
 ```
 
 ---
 
-# ⚙️ Getting Started
+## Installation & Environment Setup
 
-## 1. Clone or Open the Repository
+### Prerequisites
 
-```powershell
-cd Projects\Elephant_detector
+- **Python**: Version `3.10` or `3.11` recommended.
+- **Git**: Installed and available in your terminal path.
+- **Linux Users**: Install system libraries required by OpenCV headless environments:
+  ```bash
+  sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0
+  ```
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/pritesh-4/Project_Z-gan.git
+cd Project_Z-gan
 ```
 
-## 2. Set Up Virtual Environment
+### 2. Create and Activate a Virtual Environment
 
-### Windows (PowerShell)
-
+**Windows (PowerShell):**
 ```powershell
 python -m venv venv
-venv\Scripts\activate
+.\venv\Scripts\Activate.ps1
 ```
 
-## 3. Install Dependencies
+**macOS / Linux (Bash):**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
 
-Install the verified dependencies using `requirements.txt`:
+### 3. Install Dependencies
 
-```powershell
+Install runtime packages followed by development/testing utilities:
+
+```bash
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 ```
 
----
+### 4. Verify System Health
 
-# 🚀 Running the Detector
+Run the pre-flight diagnostic to ensure your environment, dependencies, models, and datasets are operational:
 
-## 1. Real-Time Camera Detection (Phase 2)
-
-Launch the real-time webcam elephant detector:
-
-```powershell
-python scripts/run_camera.py
+```bash
+python scripts/health_check.py
 ```
 
-### Controls & Features
-
-* **Exit**: Press `Q` or `q` at any time to release the camera and close the window safely.
-* **Bounding Boxes**:
-  * 🔴 **Red Box**: Confirmed elephant detection meeting confidence threshold (`ELEPHANT: 96%`).
-  * 🟡 **Yellow Box**: Elephant candidate below the confidence threshold (`elephant (low conf): 54%`).
-  * 🔵 **Cyan Box**: Other detected objects (e.g. `person: 82%`, `car: 75%`) displayed without triggering alerts.
-* **On-Screen HUD**:
-  * `STATUS: MONITORING` — Normal state (green badge).
-  * `STATUS: POSSIBLE ELEPHANT (X/5)` — Elephant detected, verifying persistence (amber badge).
-  * `STATUS: ELEPHANT CONFIRMED` — Elephant confirmed after 5 consecutive frames (red badge).
-  * `Cooldown Active: Xs remaining` — Shows remaining cooldown time while monitoring continues.
-  * `FPS: XX.X` — Real-time frame processing rate.
-* **Alerts**:
-  * 🚨 Console alert logged with timestamp and confidence score.
-  * Prominent red visual alert banner rendered on the video window.
-
----
-
-## 2. Static Image Detection
-
-To run detection on a single image file with annotated visualization:
-
-```powershell
-python scripts/detect_image.py tests/fixtures/elephant.jpg
-```
-Or via the AI prediction module directly:
-```powershell
-python ai/predict_custom.py tests/fixtures/elephant.jpg
-```
-
-## Running the Custom Model
-
-When custom-model mode is enabled, Project Zogan's live detector loads our validated, specialized model:
-`models/elephant_v1/best.pt` (or `runs/detect/elephant_v1/weights/best.pt`).
-
-### A. Real-Time Detection with Custom Model (Live Detector)
-By default, [`scripts/run_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/scripts/run_camera.py) automatically loads our custom fine-tuned model (`elephant_v1`):
-
-```powershell
-python scripts/run_camera.py
-```
-
-At startup, the detector displays:
+Expected diagnostic output:
 ```text
-============================================================
-🐘 PROJECT ZOGAN — ELEPHANT DETECTION SYSTEM
-Model: elephant_v1
-Weights: models/elephant_v1/best.pt
-Target Class: elephant
-Confidence Threshold: 70%
-Required Detections: 5
-Alert Cooldown: 30s
-============================================================
+PROJECT ZOGAN SYSTEM CHECK
+==================================================
+  ✓ Python          OK (3.11.x)
+  ✓ OpenCV          OK (4.8.x)
+  ✓ Ultralytics     OK (8.x.x)
+  ✓ PyTorch         OK (2.x.x, CPU)
+  ✓ Model           OK (elephant_v1 (Custom), 5.1 MB)
+  ✓ Model Class     OK (elephant, class_id=0)
+  ✓ Config          OK
+  ✓ Dataset         AVAILABLE (train=315, val=68, test=73)
+  ✓ Telegram        DISABLED (no credentials in environment)
+  ✓ GPS             SIMULATION (20.123456, 85.123456)
+==================================================
+STATUS: ALL CHECKS PASSED
 ```
 
-### B. Switching Back to Pretrained Model
-To run side-by-side A/B testing or switch back to the generic COCO pretrained model (`models/yolo26n.pt`):
+---
 
-```powershell
+## Quick Start & Usage
+
+### 1. Single-Image Detection
+
+Run detection on a static image with visual display and annotated output:
+
+```bash
+# Run on default test fixture
+python scripts/detect_image.py tests/fixtures/elephant.jpg
+
+# Run with customized confidence cutoff and save output without display
+python scripts/detect_image.py path/to/image.jpg --conf 0.65 --save output.jpg --no-show
+```
+
+### 2. Live Video & Webcam Monitoring
+
+Start the real-time orchestrator using the default connected webcam:
+
+```bash
+python scripts/run_camera.py
+```
+
+**Keyboard Controls:**
+- Press `Q` or `q` to safely release the camera capture and close all OpenCV windows.
+
+**Common CLI Options:**
+```bash
+# Monitor a recorded video file instead of a live webcam
+python scripts/run_camera.py --source data/wildlife_clip.mp4
+
+# Run using the COCO pretrained baseline model (yolo26n.pt)
 python scripts/run_camera.py --pretrained
+
+# Run with custom model weights
+python scripts/run_camera.py --model models/elephant_v1/best.pt
+
+# Adjust detection confidence and pixel movement threshold
+python scripts/run_camera.py --conf 0.75 --thresh-px 15.0
+
+# Set custom simulated elephant coordinates
+python scripts/run_camera.py --sim-lat 20.1205 --sim-lon 85.1205
+
+# Run headless (without rendering OpenCV GUI windows)
+python scripts/run_camera.py --source clip.mp4 --no-show
 ```
-Alternatively, set `USE_CUSTOM_MODEL = False` in [`config/settings.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/config/settings.py).
 
-### C. Single Image Custom Prediction
-Run detection on any test image using our custom model directly:
+### 3. Spatial Risk Simulation Demo
 
-```powershell
-python ai/predict_custom.py tests/fixtures/elephant.jpg
+Execute the trajectory simulation harness to observe the rule-based risk engine transition across Forest, Buffer, and Village perimeters:
+
+```bash
+# Standard approach trajectory
+python ai/simulate_risk.py
+
+# Receding trajectory scenario
+python ai/simulate_risk.py --scenario recede
+
+# Herd simulation (3 elephants) with high confidence
+python ai/simulate_risk.py --group-size 3 --conf 0.98
 ```
 
-### D. Side-by-Side Model Comparison
-Compare detections, confidences, and inference latencies between baseline `models/yolo26n.pt` and custom `elephant_v1` on the exact same image:
+### 4. Inspecting Alert History
 
-```powershell
+Query and inspect recorded incident events from `logs/alerts.jsonl`:
+
+```bash
+# View the 10 most recent alert events
+python alerts/history_cli.py
+
+# Filter alerts by risk level
+python alerts/history_cli.py --level CRITICAL
+
+# Inspect a specific log file with custom limit
+python alerts/history_cli.py --log-file logs/alerts.jsonl --limit 5
+```
+
+---
+
+## Machine Learning & Computer Vision Pipeline
+
+```
+Raw Image ──► Resize (416x416) ──► YOLO26n Backbone ──► Detection Head ──► NMS Post-Processing ──► Conf Gate (>= 0.70)
+```
+
+### Dataset Architecture
+
+The project dataset resides under `datasets/elephant/` and is derived from the open-access African Wildlife Detection Dataset (AGPL-3.0), remapped to a single class: `0: elephant`. Non-elephant wildlife samples (buffalo, rhino, zebra) have been systematically curated as background negative samples (empty annotation files) to minimize false positives against other large fauna.
+
+| Split | Total Images | Positive Images (Elephants) | Negative Background Images | Total Bounding Boxes |
+|:---|:---:|:---:|:---:|:---:|
+| **Train** | 315 | 271 | 44 | 557 |
+| **Validation** | 68 | 53 | 15 | 91 |
+| **Test (Held-Out)** | 73 | 58 | 15 | 99 |
+| **Total** | **456** | **382** | **74** | **747** |
+
+Validate dataset structure, label bounds, and 1:1 image-annotation parity:
+```bash
+python ai/validate_dataset.py
+```
+
+### Model Checkpoints & Specifications
+
+The repository includes two model configurations:
+
+1. **`elephant_v1` (Primary Custom Model)**:
+   - **Path**: `models/elephant_v1/best.pt` (5.1 MB)
+   - **Base Architecture**: YOLO26n (Ultralytics Nano)
+   - **Training Parameters**: 15 epochs, input resolution $416 \times 416$, batch size 16, AdamW optimizer.
+   - **Held-Out Test Set Metrics**:
+     - **Precision**: 83.3%
+     - **Recall**: 76.8%
+     - **mAP@50**: 88.2%
+     - **mAP@50-95**: 72.4%
+   - **Primary Use**: Daytime visual detection of elephants on edge and workstation devices.
+
+2. **`yolo26n.pt` (Baseline Pretrained Model)**:
+   - **Path**: `models/yolo26n.pt` (5.1 MB)
+   - **Source**: COCO-pretrained weights (Class 20: elephant).
+   - **Primary Use**: Baseline regression benchmarking and fallback testing.
+
+### Training Pipeline
+
+Fine-tune or retrain the custom elephant detector via transfer learning:
+
+```bash
+# Train with default hyperparameters (15 epochs, imgsz 416, batch 16)
+python ai/train.py
+
+# Customize training parameters
+python ai/train.py --epochs 25 --imgsz 640 --batch 16 --name elephant_v2
+```
+
+### Evaluation Pipeline
+
+Evaluate model metrics across validation and held-out test splits:
+
+```bash
+# Evaluate active weights and output prediction images
+python ai/evaluate.py
+
+# Evaluate explicit weights against dataset configuration
+python ai/evaluate.py --weights models/elephant_v1/best.pt --data datasets/elephant/data.yaml
+```
+
+Compare baseline vs. custom model inference side-by-side on an image:
+```bash
 python ai/compare_models.py tests/fixtures/elephant.jpg
 ```
 
-### E. Model Training & Evaluation Pipeline
-To retrain or re-evaluate the custom model:
+---
 
-```powershell
-# Validate dataset integrity
-python ai/validate_dataset.py
+## Multi-Object Tracking & Motion Analysis
 
-# Train custom model (transfer learning from models/yolo26n.pt)
-python ai/train.py --epochs 15 --imgsz 416 --batch 16
+Project Zogan integrates **ByteTrack** (`ai/tracking.py`) via the LAP linear assignment solver to track detected elephants across successive frames.
 
-# Evaluate on validation and unseen test sets
-python ai/evaluate.py
 ```
+Detection Bounding Boxes
+          │
+          ▼
+   ByteTrack Matching (LAP Bipartite Solver)
+          │
+          ▼
+   Assign Session Track ID (#1, #2...)
+          │
+          ▼
+   Update Centroid Buffer (Max 20 Positions)
+          │
+          ▼
+   Calculate Delta (dx, dy) over Smoothing Window (5 Frames)
+          │
+          ▼
+   Apply Deadband Threshold (>= 10.0 Pixels)
+          │
+          ▼
+   Classify 2D Image Vector: RIGHT / LEFT / UP / DOWN / STATIONARY
+```
+
+### Technical Caveats on Tracking
+
+1. **Image Space $\neq$ Geographic Direction**: An elephant moving `RIGHT` in the video frame is moving toward the right side of the camera sensor. This does **not** indicate a compass heading (East, West, etc.) unless the camera is calibrated with known exterior orientation and heading angles.
+2. **Stationary Camera Assumption**: Motion vectors assume a fixed, stationary camera mount. Camera shake, pan-tilt-zoom (PTZ) motion, or drone ego-motion will distort direction vectors.
+3. **Session IDs $\neq$ Biological Identity**: Track IDs (`#1`, `#2`) are transient tracking session numbers assigned during continuous visibility. They do not represent re-identification or individual animal identification.
 
 ---
 
-## 4. Run Automated Test Suites
+## Geofencing & Spatial Risk Engine
 
-To verify Phase 2 real-time detection, persistence, cooldown, and HUD rendering:
+The spatial assessment subsystem (`ai/geofence.py`, `ai/risk_engine.py`) determines proximity to sensitive perimeters and computes a structured risk score.
 
-```powershell
-python tests/test_phase2.py
+### Geodesic Distance Mathematics
+
+Distances are computed using the spherical Earth Great-Circle **Haversine formula** ($R = 6,371,000\text{ m}$):
+
+$$\Delta\sigma = 2 \arcsin \left( \sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos\phi_1 \cos\phi_2 \sin^2\left(\frac{\Delta\lambda}{2}\right)} \right)$$
+
+$$d = R \cdot \Delta\sigma$$
+
+Where $\phi_1, \phi_2$ are latitudes and $\lambda_1, \lambda_2$ are longitudes in radians.
+
+### Zone Perimeters
+
+By default, the system evaluates concentric radii defined relative to a protected village center (`VILLAGE_CENTER_LAT = 20.119000, VILLAGE_CENTER_LON = 85.119000`):
+
+```
+       [ VILLAGE ]       ── Inner perimeter (Radius: 300 m)  ── CRITICAL Risk Zone
+            │
+      [ BUFFER ZONE ]    ── Warning perimeter (Radius: 800 m) ── HIGH Risk Zone
+            │
+   [ FOREST MONITORING ] ── Outer perimeter (Radius: 2000 m) ── MEDIUM Risk Zone
+            │
+       [ OUTSIDE ]       ── Beyond monitoring perimeter      ── LOW Risk Zone
 ```
 
-To verify Phase 3.1 dataset infrastructure, YAML configuration, and validator error handling:
+Polygonal geofences are also supported via Jordan curve ray-casting algorithms in `ai/geofence.py`.
 
-```powershell
-python tests/test_phase3_1.py
-```
+### Multi-Factor Risk Scoring Formula
 
-To verify Phase 3.2 custom dataset integrity, counts, zero leakage, decoding, and labels:
+The risk engine computes an integer score ($0\text{--}100$) based on five weighted inputs:
 
-```powershell
-python tests/test_phase3_2.py
-```
+$$\text{Score} = \text{BaseZoneScore} + \text{ProximityPenalty} + \text{TrendAdjustment} + \text{HerdMultiplier} + \text{ConfidenceWeight}$$
 
-To verify Phase 3.4 custom model integration, model switching, class mapping, and end-to-end pipeline:
+| Component | Conditions | Contribution |
+|:---|:---|:---:|
+| **Zone Base** | `VILLAGE` / `BUFFER` / `FOREST` / `OUTSIDE` | $80$ / $50$ / $25$ / $10$ |
+| **Proximity Penalty** | Scaled linearly by distance to sensitive boundary | $0 \text{ to } 20$ |
+| **Approach Trend** | `APPROACHING` / `STABLE` / `RECEDING` | $+15$ / $0$ / $-15$ |
+| **Group Size** | $\ge 4$ elephants (herd) / $2\text{--}3$ / single | $+10$ / $+5$ / $0$ |
+| **Confidence Weight** | Low-confidence detection scale | $-10 \text{ to } 0$ |
 
-```powershell
-python tests/test_phase3_4.py
-```
-
-To verify Phase 4 object tracking, track IDs, center points, bounded history, image-space movement, anti-jitter threshold, multi-elephant tracking, and lost-track expiration:
-
-```powershell
-python tests/test_phase4.py
-```
-
-To verify Phase 5 geofencing, Haversine geodesic distance, zone classification, approach/recede trends, and rule-based risk evaluation:
-
-```powershell
-python tests/test_phase5.py
-```
-
-To verify Phase 6 alert event logging, Telegram dispatch, and history querying:
-
-```powershell
-python tests/test_phase6.py
-python -m pytest tests/test_alerts.py
-```
+The bounded score is mapped directly to operational risk levels:
+- **`0 – 24`**: **LOW** (Background monitoring; no alarm)
+- **`25 – 49`**: **MEDIUM** (Advisory warning; continuous observation)
+- **`50 – 74`**: **HIGH** (Local alert; team dispatch recommended)
+- **`75 – 100`**: **CRITICAL** (Immediate perimeter alert; urgent intervention)
 
 ---
 
-# ⚙️ Configuration
+## Alerting & Incident Logging Subsystem
 
-All key parameters are easily configurable in [`config/settings.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/config/settings.py):
+Confirmed detection incidents are gated through temporal verification before dispatch:
 
-```python
-# Model selection configuration
-USE_CUSTOM_MODEL = True
-CUSTOM_MODEL_PATH = "models/elephant_v1/best.pt"
-FALLBACK_MODEL_PATH = "runs/detect/elephant_v1/weights/best.pt"
-PRETRAINED_MODEL_PATH = "models/yolo26n.pt"
-
-# Minimum confidence required to accept an elephant detection (70%)
-CONFIDENCE_THRESHOLD = 0.70
-
-# Number of consecutive frames an elephant must be detected before alert
-REQUIRED_DETECTIONS = 5
-
-# Time in seconds to wait before allowing another alert (prevents alert spam)
-ALERT_COOLDOWN_SECONDS = 30
-
-# Duration in seconds to display the visual emergency banner
-ALERT_BANNER_DURATION_SECONDS = 4.0
-
-# Target class name to monitor
-TARGET_CLASS = "elephant"
-
-# Default webcam index (0 is standard default camera)
-CAMERA_INDEX = 0
+```
+[Detection: conf >= 0.70]
+           │
+           ▼
+[Persistence: >= 5 Consecutive Frames]
+           │
+           ▼
+[Cooldown Gate: >= 30s Since Last Alert]
+           │
+           ▼
+[Risk Gate: Level >= HIGH (or configured threshold)]
+           │
+           ▼
+  create_alert_event()
+           │
+           ├──► alerts.event_logger.log_alert() ──► logs/alerts.jsonl
+           │
+           └──► alerts.telegram.send_telegram_alert() (if configured)
 ```
 
----
+### Structured `AlertEvent` Schema
 
-# 🔬 Phase 2 Key Mechanisms
+Each incident is modeled as an immutable, non-fabricated `AlertEvent` dataclass:
 
-### 1. Confidence Filtering
-Prevents low-confidence noise from registering as an elephant. Only detections with `confidence >= 0.70` (70%) are counted toward an alert.
-
-### 2. Multi-Frame Persistent Detection
-Single-frame detection anomalies (glitches, reflections, false positives) are ignored. An alert requires `REQUIRED_DETECTIONS = 5` consecutive frames of confirmed elephant presence.
-
-### 3. Automatic Counter Reset
-If an elephant leaves the frame or is no longer detected, the consecutive detection counter immediately resets to `0`, returning the system to `MONITORING`.
-
-### 4. Alert Cooldown
-When an elephant is confirmed and an alert is dispatched, an `ALERT_COOLDOWN_SECONDS = 30` cooldown is initiated. During cooldown:
-* The video stream continues processing smoothly.
-* Visual indicators remain active.
-* Terminal alerts are not spammed every frame.
-* A new alert is only triggered if an elephant remains or reappears after the cooldown expires.
-
----
-
----
-
-# 🐘 Phase 4 — Object Tracking & Movement Analysis
-
-Phase 4 introduces multi-object elephant tracking across video frames using **Ultralytics ByteTrack**, paired with 2D image-space movement estimation, bounded position history, anti-jitter filtering, and real-time HUD metrics.
-
-### 1. Why Tracking Is Needed
-Previous phases treated each video frame independently:
-- Frame 1 → Elephant detected
-- Frame 2 → Elephant detected
-- Frame 3 → Elephant detected
-
-The detector had no concept of temporal identity or persistence over time. Phase 4 introduces tracking so the system recognizes:
-- Frame 1 → Elephant ID #1
-- Frame 2 → Elephant ID #1
-- Frame 3 → Elephant ID #1
-- Frame 4 → Elephant ID #1
-
-**"We are following the same elephant."**
-
-This allows us to maintain position history, suppress bounding box jitter, and analyze whether an elephant is stationary or moving across the field of view.
-
-### 2. Pipeline Architecture
-```text
-      📷 CAMERA / VIDEO REPLAY
-                 ↓
-     🤖 CUSTOM YOLO MODEL (elephant_v1)
-                 ↓
-    🐘 ELEPHANT DETECTION (conf >= 0.70)
-                 ↓
-       🎯 BYTETRACK TRACKER
-                 ↓
-      🏷️ TEMPORARY TRACK ID (#1, #2...)
-                 ↓
-     📈 POSITION HISTORY (MAX_HISTORY = 20)
-                 ↓
- 🧭 DIRECTION ESTIMATION (RIGHT/LEFT/UP/DOWN/STATIONARY)
-                 ↓
-  🖥️ HUD & ENHANCED LOCAL ALERTS (WITH COOLDOWN)
-```
-
-### 3. Key Tracking Capabilities
-* **Temporary Track IDs**: Each detected elephant is assigned a lightweight session ID (e.g. `ELEPHANT #1`, `ELEPHANT #2`) using ByteTrack's bipartite Hungarian matching.
-* **Center-Point Calculation**: Every bounding box is mapped to its center coordinate:
-  $$\text{center}_x = \frac{x_1 + x_2}{2}, \quad \text{center}_y = \frac{y_1 + y_2}{2}$$
-* **Bounded Position History**: Maintains up to `MAX_HISTORY = 20` points per tracked elephant, preventing memory bloat.
-* **Image-Space Movement Direction**: Computes dominant movement vector:
-  * `RIGHT`: $\Delta x > 0$ and $|\Delta x| \ge |\Delta y|$
-  * `LEFT`: $\Delta x < 0$ and $|\Delta x| \ge |\Delta y|$
-  * `UP`: $\Delta y < 0$ and $|\Delta y| > |\Delta x|$ (in image coordinates, $y$ decreases upwards)
-  * `DOWN`: $\Delta y > 0$ and $|\Delta y| > |\Delta x|$
-  * `STATIONARY`: Displacement $< \text{MOVEMENT\_THRESHOLD\_PIXELS}$ (default: 10 px)
-  * `UNKNOWN`: New track with insufficient frame history ($< 2$ frames)
-* **Anti-Jitter Suppression**: Bounding boxes naturally fluctuate by several pixels frame-to-frame. The configurable movement threshold (`MOVEMENT_THRESHOLD_PIXELS = 10.0`) and multi-frame window smoothing ensure minor detector noise is classified as `STATIONARY`.
-* **Multiple Elephant Tracking**: Simultaneously maintains separate histories, IDs, and movement vectors for multiple elephants in frame.
-* **Lost-Track Tolerance**: Tolerates temporary occlusions or dropped detections for up to 30 frames (`track_buffer = 30`) before cleanly evicting expired tracks.
-* **Video File Replay Option**: Process recorded video files for repeatable verification:
-  ```powershell
-  python scripts/run_camera.py --source elephant_video.mp4
-  ```
-
----
-
-# ⚠️ Important Limitations (Phase 4)
-
-Clearly documented constraints and boundary conditions:
-
-1. **Direction is image-space direction only**: Movement labels (`RIGHT`, `LEFT`, `UP`, `DOWN`) reflect movement within the camera's 2D sensor frame. They do **NOT** indicate geographic or compass headings (`NORTH`, `SOUTH`, `EAST`, `WEST`).
-2. **The camera is assumed stationary**: Image-space movement is valid only when the camera itself does not move. Camera pan, tilt, shake, or vehicle motion will produce false motion vectors. Camera ego-motion compensation is not yet implemented.
-3. **Tracking IDs are temporary session IDs**: IDs identify tracked objects during the current session only. They do **NOT** represent permanent biological identities of individual elephants.
-4. **Movement speed is not yet real-world speed**: Movement displacement is measured in pixels per frame, not meters per second.
-5. **Pixel movement does not equal physical distance**: Because of perspective distortion, an elephant moving 20 pixels in the background has traveled a much greater physical distance than one moving 20 pixels in the foreground.
-6. **No geographic location was known in Phase 4**: Operating purely in pixel coordinates without GPS, boundary maps, or geofences *(addressed in Phase 5 via simulated spatial intelligence)*.
-7. **No risk score existed in Phase 4**: Movement was not connected to threat levels *(addressed in Phase 5 via rule-based risk engine)*.
-8. **The system does not predict elephant behavior**: No behavioral intent, aggression modeling, or herd intention is inferred.
-
----
-
-# 🗺️ Phase 5 — GPS, Geofencing & Basic Risk Assessment
-
-Phase 5 introduces a software-only spatial intelligence layer combining simulated camera GPS coordinates, multi-tier geofenced zones, geodesic Haversine distance calculations, approach trend tracking, and a rule-based early-warning risk scoring engine.
-
-### 1. Why Geographic Context Matters
-In Phase 4, the system could detect that an elephant moved "RIGHT" or "LEFT". However:
-- "RIGHT" does not mean "EAST".
-- "RIGHT" does not mean "TOWARD THE VILLAGE".
-- A camera facing North sees "RIGHT" as East; a camera facing South sees "RIGHT" as West.
-
-Without geographic anchoring, image-space movement cannot assess whether an animal is approaching human settlements. Phase 5 adds this spatial grounding in software.
-
-### 2. Geofenced Zones Model
-The system defines concentric and polygonal spatial zones configured relative to the protected human community:
-1. **Protected / Village Settlement Zone** (High priority core protection area, e.g. 300m radius around settlement).
-2. **Buffer / Warning Zone** (Intermediate corridor between wilderness and village, e.g. 800m perimeter).
-3. **Forest / Monitoring Zone** (Natural habitat monitoring perimeter, e.g. 2000m perimeter).
-4. **Outside** (Beyond monitored territory).
-
-### 3. Geodesic Calculations & Distance
-All spatial distances are computed using the **Haversine formula** on the WGS84 sphere, returning real-world distances in meters:
-```python
-distance = calculate_distance(lat1, lon1, lat2, lon2)
-```
-- Example: Camera at `(20.1234, 85.1234)`, Target at `(20.1240, 85.1240)` $\longrightarrow$ **91.52 meters (~90m)**.
-
-### 4. Approach Trend Stability
-Rather than reacting to single-frame noise, the `MovementTrendTracker` evaluates the distance delta over a multi-observation window:
-- $\Delta d \le -15.0\text{m} \longrightarrow$ **`APPROACHING`** (Elephant is moving closer to protected zone)
-- $\Delta d \ge +15.0\text{m} \longrightarrow$ **`RECEDING`** (Elephant is moving away)
-- $|\Delta d| < 15.0\text{m} \longrightarrow$ **`STABLE`** (Elephant is stationary or milling within noise margin)
-- History $< 2$ points $\longrightarrow$ **`UNKNOWN`**
-
-### 5. Rule-Based Risk Engine
-The system evaluates a transparent numerical score ($0–100$) based on 5 objective factors:
-1. **Zone Severity** (Max 40 pts): Village (40), Buffer (20), Forest (5), Outside (0)
-2. **Proximity to Protected Zone** (Max 25 pts): 0m (25), $\le 200$m (20), $\le 500$m (15), $\le 1000$m (5)
-3. **Approach Trend** (Max 20 pts): `APPROACHING` (+20), `STABLE`/`UNKNOWN` (+5), `RECEDING` (0)
-4. **Group Size / Herd Count** (Max 10 pts): $\ge 4$ elephants (10), 2–3 elephants (5), 1 elephant (2)
-5. **Detection Confidence** (Max 10 pts): $\ge 90\%$ (10), $\ge 80\%$ (7), $\ge 70\%$ (5)
-
-Scores map to 4 actionable levels:
-- **`0 – 24` $\longrightarrow$ `LOW`**: Far in forest, stable/receding. Continue normal monitoring.
-- **`25 – 49` $\longrightarrow$ `MEDIUM`**: In forest approaching, or in buffer zone stable. Elevated visual monitoring.
-- **`50 – 74` $\longrightarrow$ `HIGH`**: In buffer corridor approaching settlement. Triggers local early-warning alert!
-- **`75 – 100` $\longrightarrow$ `CRITICAL`**: Inside or directly breaching protected village perimeter. Triggers high-priority emergency alarm!
-
-### 6. Trajectory Simulation Script
-Run the automated trajectory simulation to observe the risk engine evaluate an approaching sequence:
-```powershell
-python ai/simulate_risk.py                    # Approach simulation (1000m down to 0m)
-python ai/simulate_risk.py --scenario recede  # Receding simulation (150m out to 1200m)
-python ai/simulate_risk.py --group-size 4     # Herd approach simulation
-```
-
----
-
-# 🔔 Phase 6: Event Logging & Remote Alert System
-
-Phase 6 implements a reliable, non-blocking alert incident infrastructure connecting real-time computer vision and rule-based risk evaluation directly to persistent local records and remote Telegram notifications.
-
-### 1. Structured Alert Event Model (`AlertEvent`)
-Each confirmed incident produces a clean event representation containing ONLY observed metrics without fabricating data:
 ```json
 {
-  "event_id": "evt_48a901fbc34d",
-  "timestamp": "2026-10-03T00:36:32Z",
-  "risk_level": "HIGH",
+  "event_id": "zogan-c8d1e2f3a4b5",
+  "timestamp": "2026-10-03T18:30:00.123456+00:00",
+  "alert_level": "HIGH",
   "risk_score": 72,
   "confidence": 0.94,
-  "track_id": 2,
-  "group_size": 4,
-  "zone": "WARNING",
-  "distance_m": 380.0,
+  "track_id": 1,
+  "group_size": 1,
+  "zone": "BUFFER",
+  "distance_m": 420.5,
   "movement": "APPROACHING",
-  "simulation": true
+  "simulation_mode": true,
+  "camera_id": "cam-01"
 }
 ```
 
-### 2. Local JSON Lines Logging (`logs/alerts.jsonl`)
-- **JSONL Format**: Each line is an independent, valid JSON record, preventing file lockouts or corruption from incomplete writes.
-- **Safe Directory Creation**: `logs/` directory is automatically created if missing, preventing crashes.
-- **Git Ignored**: Runtime incident logs in `logs/` and `*.jsonl` are automatically ignored by Git.
+Missing or unmeasured values are strictly omitted rather than filled with dummy or fabricated values.
 
-### 3. Alert History Querying (`alerts/history.py`)
-```python
-from alerts.history import load_alerts, count_alerts, get_latest_alert, filter_by_risk
+### Local JSON Lines Logging
 
-# Load recent alerts
-recent = load_alerts(limit=5)
+Events are appended atomically to `logs/alerts.jsonl`. Corrupted or incomplete lines are isolated and skipped gracefully without failing read queries.
 
-# Count total alerts or high-risk incidents
-total = count_alerts()
-high_risk_count = count_alerts(risk_level="HIGH")
+### Remote Telegram Delivery
 
-# Retrieve the latest confirmed alert
-latest = get_latest_alert()
-```
+The Telegram client (`alerts/telegram.py`) uses standard Python `urllib` to dispatch alerts to the Telegram Bot API:
+- **Zero-Dependency**: No external heavy bot frameworks required.
+- **Fail-Safe Isolation**: Network timeouts, DNS failures, or invalid credentials emit non-crashing warnings and **never** interrupt the video capture thread.
+- **Credential Hygiene**: Tokens and chat IDs are read strictly from environment variables (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`) or a local `.env` file.
 
-### 4. Remote Telegram Alert Service (`alerts/telegram.py`)
-- Reads credentials strictly from environment variables: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
-- Never hardcodes tokens or commits secrets (`.env` is ignored by Git, `.env.example` provided).
-- Formats structured, human-readable Telegram alerts:
-
-```text
-🚨 PROJECT ZOGAN ALERT
-
-Risk: HIGH
-Score: 72
-Confidence: 94%
-
-Track: #2
-Group Size: 4
-
-Zone: WARNING
-Distance: 380 m
-Movement: APPROACHING
-
-Time: 2026-10-03 00:36:32
-
-Mode: SIMULATION
-```
-
-### 5. Unified Fail-Safe Dispatcher (`alerts/dispatcher.py`)
-- Single clean entry point: `dispatch_alert(event)`.
-- Logs the incident locally to `logs/alerts.jsonl`.
-- Delivers remote notification if Telegram is configured.
-- **Guaranteed Pipeline Safety**: Network timeouts, HTTP errors, or missing credentials will **NEVER** crash the real-time detection camera loop.
+**Setting Up Telegram Alerts:**
+1. Create a bot using [@BotFather](https://t.me/BotFather) on Telegram and copy the bot token.
+2. Retrieve your personal or group chat ID using [@userinfobot](https://t.me/userinfobot).
+3. Copy `.env.example` to `.env` and insert your credentials:
+   ```bash
+   cp .env.example .env
+   ```
+   ```ini
+   TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
+   TELEGRAM_CHAT_ID=987654321
+   ```
 
 ---
 
-# ⚠️ Important Limitations & Safety Disclaimers (Phase 6)
+## Configuration Reference
 
-Clearly documented constraints and ethical boundaries:
+System behavior is configured through `config/settings.py`. Key operational parameters include:
 
-1. **Experimental Prototype Only**: This is an experimental decision-support prototype. It is NOT an official wildlife-management system.
-2. **Not a Validated Biological Model**: The risk score is rule-based and not a scientifically validated animal-behavior model. An elephant is NOT inherently dangerous simply because it exists; risk is defined purely by spatial proximity to human agriculture/settlements.
-3. **No Intent or Behavioral Prediction**: The system cannot predict elephant mood, intent, or charging behavior.
-4. **Camera GPS $\neq$ Elephant GPS**: Camera coordinates are known. An RGB camera cannot determine real-world GPS coordinates without rangefinding/depth sensors. In this phase, elephant coordinates are **simulated** in software.
-5. **No Physical GPS Hardware**: No physical GPS modules (NEO-6M, u-blox) are integrated yet.
-6. **Remote Channels (Phase 6 Complete)**: Local JSON Lines logging and Telegram notifications are implemented. Multi-channel failover (SMS, WhatsApp, LoRa, 4G hardware modems) and audio siren triggers remain out-of-scope for Phase 6.
-7. **Stationary Camera Assumption**: Camera orientation and position are assumed static; camera motion compensation is not yet supported.
-
----
-
-# 🧪 Development Roadmap
-
-### Phase 1 — Basic Detection
-* [x] Python environment setup
-* [x] Install YOLO & OpenCV
-* [x] Load pretrained model (`yolo26n.pt`)
-* [x] Static image detection (`detect.py`)
-* [x] Understand bounding boxes & confidence scores
-
-### Phase 2 — Real-Time Detection
-* [x] Webcam input integration via OpenCV
-* [x] Real-time YOLO inference pipeline
-* [x] Target class filtering (`TARGET_CLASS = "elephant"`)
-* [x] Configurable confidence threshold (`CONFIDENCE_THRESHOLD = 0.70`)
-* [x] Persistent multi-frame detection counter (`REQUIRED_DETECTIONS = 5`)
-* [x] Detection counter reset logic
-* [x] Alert cooldown rate limiter (`ALERT_COOLDOWN_SECONDS = 30`)
-* [x] Heads-Up Display (HUD) with real-time state, persistence progress, and FPS
-* [x] Non-blocking visual alert banner and timestamped terminal alerts
-* [x] Clean shutdown handling with `Q` key
-
-### Phase 3 — Custom Elephant Model
-* [x] Dataset preparation
-* [x] Dataset validation
-* [x] Custom dataset
-* [x] Annotation
-* [x] Model training
-* [x] Model evaluation
-* [x] Custom model integration
-* [ ] Model improvement (Asian elephants, infrared/night vision, adverse weather)
-
-### Phase 4 — Intelligent Tracking
-* [x] Object tracking (ByteTrack)
-* [x] Track IDs (Temporary session IDs: ELEPHANT #1, #2...)
-* [x] Position history (Bounded to 20 centers)
-* [x] Movement estimation (Image-space: RIGHT, LEFT, UP, DOWN, STATIONARY)
-* [x] Multiple elephant tracking
-* [x] Basic movement HUD & Enhanced alert info
-* [x] Geographic movement & approach trend (Implemented in Phase 5)
-* [x] Risk assessment engine (Implemented in Phase 5)
-* [ ] Camera motion compensation
-
-### Phase 5 — GPS, Geofencing & Basic Risk Assessment
-* [x] Geographic utility module (`ai/geofence.py`)
-* [x] Simulated camera coordinates (`config.py`)
-* [x] Geofence support (Village, Buffer, Forest)
-* [x] Distance calculation (Haversine formula in meters)
-* [x] Zone classification (Village > Buffer > Forest > Outside)
-* [x] Basic approach trend (APPROACHING / RECEDING / STABLE)
-* [x] Rule-based risk engine (LOW, MEDIUM, HIGH, CRITICAL)
-* [x] Simulation mode & test script (`ai/simulate_risk.py`)
-* [x] Risk-aware local alerts & HUD context
-* [x] Remote notification system (Implemented in Phase 6 via Telegram & JSONL)
-* [ ] Real GPS hardware integration
-* [ ] Camera heading calibration
-* [ ] Real-world elephant coordinate estimation via calibrated depth/ranging sensors
-
-### Phase 6 — Remote Alerting & Event Logging
-* [x] Alert Event data model (`AlertEvent`, non-fabricated fields)
-* [x] Local JSON Lines logger (`logs/alerts.jsonl` with safe directory creation)
-* [x] Alert history query utility (`alerts/history.py` - load, count, filter, get_latest)
-* [x] Telegram Bot API remote alert integration (`alerts/telegram.py`)
-* [x] Clean environment variable secrets handling (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `.env.example`)
-* [x] Formatted Telegram notification messages
-* [x] Unified fail-safe alert dispatcher (`alerts/dispatcher.py`)
-* [x] Seamless pipeline integration with backward compatibility
-* [ ] Multi-channel fallback (SMS / WhatsApp)
-* [ ] Web monitoring dashboard
-* [ ] Sound / Siren alarm trigger
-
-### Phase 7 — Edge AI Deployment
-* [ ] Port pipeline to edge hardware (NVIDIA Jetson / Raspberry Pi)
-* [ ] IR / Thermal camera sensor fusion for nighttime detection
-* [ ] Solar & battery power management
-* [ ] Low-power standby and wake-on-motion
+| Category | Parameter | Default Value | Description |
+|:---|:---|:---:|:---|
+| **Model** | `CUSTOM_MODEL_PATH` | `models/elephant_v1/best.pt` | Path to primary custom fine-tuned weights |
+| | `PRETRAINED_MODEL_PATH` | `models/yolo26n.pt` | Path to fallback baseline weights |
+| | `USE_CUSTOM_MODEL` | `True` | Whether to load custom model by default |
+| | `TARGET_CLASS` | `"elephant"` | Target class name to monitor |
+| **Detection** | `CONFIDENCE_THRESHOLD` | `0.70` | Minimum confidence score to accept detection |
+| | `REQUIRED_DETECTIONS` | `5` | Consecutive positive frames before confirming incident |
+| | `MIN_BOX_AREA_PIXELS` | `400` | Minimum bounding box pixel area (filters optical noise) |
+| **Alerting** | `ALERT_COOLDOWN_SECONDS` | `30` | Minimum elapsed seconds between alerts |
+| | `ALERT_BANNER_DURATION_SECONDS` | `4.0` | On-screen emergency banner display duration |
+| | `ALERT_TRIGGER_RISK_LEVEL` | `"HIGH"` | Minimum risk level required to trigger external alerts |
+| **Tracking** | `TRACKER_CONFIG` | `"bytetrack.yaml"` | Tracker profile for Ultralytics ByteTrack |
+| | `MOVEMENT_THRESHOLD_PIXELS` | `10.0` | Minimum pixel delta to register directional movement |
+| | `MAX_POSITION_HISTORY` | `20` | Maximum historical centroid points stored per track |
+| | `MAX_LOST_FRAMES` | `30` | Frames before evicting a lost track (~1s at 30 fps) |
+| **Geofencing** | `CAMERA_LATITUDE` | `20.123456` | Default simulated camera latitude |
+| | `CAMERA_LONGITUDE` | `85.123456` | Default simulated camera longitude |
+| | `VILLAGE_RADIUS_METERS` | `300.0` | Radius of protected village perimeter |
+| | `BUFFER_RADIUS_METERS` | `800.0` | Radius of intermediate warning perimeter |
+| | `FOREST_RADIUS_METERS` | `2000.0` | Radius of outer monitoring perimeter |
+| | `DEFAULT_SIMULATION_MODE`| `True` | Enables dynamic coordinate drift simulation |
+| **Risk Engine**| `RISK_LEVEL_LOW_MAX` | `24` | Upper bound for LOW risk level |
+| | `RISK_LEVEL_MEDIUM_MAX` | `49` | Upper bound for MEDIUM risk level |
+| | `RISK_LEVEL_HIGH_MAX` | `74` | Upper bound for HIGH risk level (75+ is CRITICAL) |
+| | `TREND_STABILITY_THRESHOLD_METERS`| `15.0` | Distance delta buffer to classify STABLE trend |
 
 ---
 
-## 🛡️ Continuous Integration & Quality Gate (GitHub Actions)
+## Testing & Quality Assurance
 
-Project Zogan uses an automated GitHub Actions CI/CD pipeline defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) to guard against regressions, syntax errors, import mismatches, and broken test suites.
+Project Zogan maintains automated test coverage across all architectural subsystems.
 
-```text
-CODE CHANGE / PULL REQUEST
-            ↓
-  GitHub Actions CI (Ubuntu)
-            ↓
-  1. Checkout & Setup Python 3.11 (with pip cache)
-            ↓
-  2. Install headless system libs (libgl1, libglib2.0-0)
-            ↓
-  3. Install dependencies (requirements.txt & requirements-dev.txt)
-            ↓
-  4. Python syntax compilation (python -m compileall)
-            ↓
-  5. Core imports verification (torch, cv2, ultralytics, lap)
-            ↓
-  6. Code quality & lint gate (ruff check .)
-            ↓
-  7. Code formatting gate (ruff format --check .)
-            ↓
-  8. Tracked secret detection (scan for .env, .pem, .key)
-            ↓
-  9. Dataset & YAML configuration integrity (validate_dataset.py)
-            ↓
- 10. Automated Test Suites (Phases 2, 3.1, 3.2, 3.4, 4, 5 & Risk simulation)
-            ↓
-  ✅ PASS → Allowed to merge into main
-  ❌ FAIL → Merge blocked
-```
+### Automated Test Suite (81 Tests)
 
-### CI Pipeline Features
-* **Automatic Triggers**: Runs on all pull requests targeting `main` and pushes to `main`.
-* **Fast Failure**: Fails immediately on any syntax error, missing dependency, failing test, or lint error.
-* **Concurrency Control**: Automatically cancels outdated runs when a newer commit is pushed to the same pull request (`cancel-in-progress: true`).
-* **Hardware-Safe**: GitHub-hosted runners execute software-only and headless tests. Hardware-dependent operations (live webcam feeds, physical sensors) are kept out of CI.
-* **No In-CI Model Training**: CI evaluates existing models and verifies integrity without running compute-heavy training loops.
-
----
-
-## 🧪 Local CI Checks
-
-Before pushing changes or creating a Pull Request, developers should run the exact same checks locally:
+Execute the complete test suite using Pytest:
 
 ```bash
-# 1. Validate Python syntax across all project files
-python -m compileall -q -x "venv|\.venv" .
+pytest
+```
 
-# 2. Check imports and core environment
-python -c "import torch, cv2, ultralytics, yaml, lap; print('Core dependencies OK!')"
+All 81 tests pass across 8 focused test modules:
+```text
+tests/test_alerts.py ................                                    [ 19%]
+tests/test_phase2.py .                                                   [ 20%]
+tests/test_phase3_1.py ......                                            [ 28%]
+tests/test_phase3_2.py .......                                           [ 37%]
+tests/test_phase3_4.py ........                                          [ 46%]
+tests/test_phase4.py ..............                                      [ 64%]
+tests/test_phase5.py ..............                                      [ 81%]
+tests/test_phase6.py ...............                                     [100%]
 
-# 3. Code quality lint check
+============================= 81 passed in ~32s ==============================
+```
+
+Individual test suites verify:
+- **`test_alerts.py`**: Model serialization, dictionary exports, parameter equivalence, and log parsing.
+- **`test_phase2.py`**: Multi-frame detection persistence logic and cooldown timers.
+- **`test_phase3_1.py`**: Dataset directory structure, split counts, and `data.yaml` schema validity.
+- **`test_phase3_2.py`**: Bounding box coordinate bounds, no-data-leakage verification, and label format.
+- **`test_phase3_4.py`**: Custom model loading, inference shapes, and detector fallback resolution.
+- **`test_phase4.py`**: ByteTrack session assignment, position history bounds, and 2D image motion vectors.
+- **`test_phase5.py`**: Haversine distance accuracy, circular/polygonal zone containment, and risk scoring.
+- **`test_phase6.py`**: Atomic JSONL logging, schema validation, and Telegram mock delivery/network recovery.
+
+### Code Style & Static Analysis
+
+Code quality is enforced using **Ruff**:
+
+```bash
+# Run static analysis and lint checks
 ruff check .
 
-# 4. Code formatting check (check-only mode)
+# Check code formatting compliance
 ruff format --check .
-
-# (Optional) Auto-format files locally
-ruff format .
-ruff check --fix .
-
-# 5. Dataset and configuration validation
-python ai/validate_dataset.py
-
-# 6. Run automated test suites (Headless & Safe)
-python tests/test_phase2.py
-python tests/test_phase3_1.py
-python tests/test_phase3_2.py
-python tests/test_phase3_4.py
-python tests/test_phase4.py
-python tests/test_phase5.py
-python tests/test_phase6.py
-python -m pytest tests/test_alerts.py
-python ai/simulate_risk.py
 ```
 
----
+### Continuous Integration (CI)
 
-## 🔒 Main Branch Protection Policy
-
-To guarantee repository integrity, direct pushes to `main` should be disabled, and pull requests must pass the CI gate before merging.
-
-### GitHub Repository Setup Guide
-To configure this policy in GitHub:
-1. Navigate to the repository on GitHub: `https://github.com/pritesh-4/Project_Zogan`.
-2. Click **Settings** → **Branches** (or **Rules** → **Rulesets**).
-3. Under **Branch protection rules**, click **Add branch ruleset** or **Add rule**.
-4. Set **Branch name pattern** to `main`.
-5. Enable the following protection policies:
-   - **Require a pull request before merging**: Prevents direct pushes to `main`.
-   - **Require status checks to pass before merging**:
-     - Check **Require branches to be up to date before merging**.
-     - In the search box, select the status check: **`Code Quality & Test Gate`** (Job name: `ci`).
-   - **Do not allow force pushes**: Blocks force-pushes to `main`.
-   - **Do not allow deletions**: Prevents accidental deletion of the `main` branch.
-6. Click **Save changes** / **Create**.
-
-With this policy active:
-```text
-feature/branch ──► Pull Request ──► GitHub Actions CI ──► Required Check (ci) PASS ──► Merge into main
-```
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push and pull request to `main`:
+1. Validates Python syntax across the entire tree (`compileall`).
+2. Confirms core runtime dependencies (`torch`, `cv2`, `ultralytics`, `lap`).
+3. Executes `scripts/health_check.py`.
+4. Runs `ruff check` and `ruff format --check`.
+5. Enforces tracked secret screening (ensuring no `.env` or credential files are committed).
+6. Runs `ai/validate_dataset.py`.
+7. Executes all 81 automated tests and simulation scenarios.
 
 ---
 
-## 📚 Project Documentation
+## Limitations & Honest Engineering Constraints
 
-* [System Architecture](docs/ARCHITECTURE.md) — Technical pipeline, layers, and class interactions.
-* [Repository Structure](docs/PROJECT_STRUCTURE.md) — Standardized directory layout and module responsibilities.
-* [Audit Report](docs/AUDIT_REPORT.md) — Comprehensive engineering audit findings and remediation records.
-* [Changelog](docs/CHANGELOG.md) — Chronological log of versions, fixes, and improvements.
-* [Contributing Guidelines](docs/CONTRIBUTING.md) — Development workflow, pull requests, and coding standards.
+Project Zogan is an active research prototype. Reviewers and developers must understand its inherent operational limitations:
+
+1. **Monocular Visual Ranging**:
+   - Monocular RGB cameras provide only 2D projection data. They cannot directly measure metric distance to an animal or derive real-world geographic coordinates without auxiliary rangefinders, calibrated LiDAR, stereo camera pairs, or known ground-plane homography.
+2. **Daytime RGB Dependency**:
+   - The current model is trained exclusively on daytime RGB photography. Performance degrades substantially in low-light, nighttime, dense fog, or heavy monsoon rainfall. True nocturnal operation requires thermal or infrared (FLIR) optical sensors.
+3. **Species Representation Bias**:
+   - Training imagery is sourced primarily from African wildlife datasets (*Loxodonta africana*). Asian elephants (*Elephas maximus*) exhibit different ear morphologies, body contours, and environmental backdrops (dense tropical evergreen forest vs. open savanna), which may reduce confidence.
+4. **Static Camera Assumption**:
+   - Tracking vectors assume stationary camera placement. Panning, tilting, or moving platforms introduce apparent image-space motion that will invalidate directional movement classifications unless compensated for via optical flow ego-motion estimation.
+5. **No Biological Intent Modeling**:
+   - The risk engine evaluates **spatial geometry**, not animal psychology. The system does not predict whether an individual elephant is aggressive, startled, habituated, or calm.
 
 ---
 
-## ⭐ Contributing & License
+## Roadmap & Future Work
 
-This project is built for **wildlife conservation, human-wildlife conflict mitigation, and community safety**.
+- [ ] **Edge Hardware Optimization**:
+  - Export custom weights to TensorRT and ONNX for execution on NVIDIA Jetson Orin Nano / Xavier edge modules.
+- [ ] **Thermal & Multispectral Vision**:
+  - Integrate thermal camera video streams (e.g., FLIR Boson / Seek Thermal) and compile a nocturnal infrared elephant dataset.
+- [ ] **Asian Elephant Dataset Expansion**:
+  - Ingest annotated imagery of Asian elephant populations across South and Southeast Asian habitats.
+- [ ] **Camera Homography & Range Estimation**:
+  - Implement monocular ground-plane homography and camera calibration to estimate metric ground distance directly from bounding box footpoints.
+- [ ] **Off-Grid Telemetry**:
+  - Support LoRaWAN and satellite SMS gateways for alert transmission in remote forest areas lacking cellular coverage.
+- [ ] **Hardware NMEA GPS Integration**:
+  - Read live serial NMEA data from USB/UART GPS modules to dynamically place camera installations on real GIS base maps.
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for branch guidelines, setup instructions, and contribution best practices.
+---
 
+## Contributing
+
+Contributions from wildlife technologists, computer vision researchers, and open-source engineers are welcome.
+
+1. **Fork the Repository** and create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+2. **Adhere to Code Standards**:
+   - Format and lint all Python files using `ruff check .` and `ruff format .`.
+   - Ensure all 81 tests pass (`pytest`).
+   - Add targeted unit tests for any new modules or algorithmic logic.
+3. **Review Guidelines**: Consult [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for detailed commit conventions, architecture patterns, and pull request procedures.
+
+---
+
+## License & Acknowledgments
+
+- **Dataset**: Sourced from the African Wildlife Detection Dataset curated by Ultralytics, licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+- **Deep Learning Framework**: Built with [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) and [PyTorch](https://pytorch.org/).
+- **Tracking Algorithm**: Implemented using [ByteTrack](https://github.com/ifzhang/ByteTrack) via the LAP linear assignment solver.
+- **Documentation**: For in-depth engineering audit details, architectural specifications, and project history, refer to:
+  - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+  - [`docs/AUDIT_REPORT.md`](docs/AUDIT_REPORT.md)
+  - [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)
+  - [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
