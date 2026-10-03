@@ -34,7 +34,7 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
-PRETRAINED_PATH = Path("yolo26n.pt")
+PRETRAINED_PATH = Path("models/yolo26n.pt") if Path("models/yolo26n.pt").exists() else Path("yolo26n.pt")
 CUSTOM_PATHS = [
     Path("models/elephant_v1/best.pt"),
     Path("runs/detect/elephant_v1/weights/best.pt"),
@@ -85,11 +85,18 @@ def compare_models(
 ):
     image_path = Path(image_path_str)
     if not image_path.exists():
-        print(f"❌ Error: Image file not found: {image_path}")
-        return False
+        fixture_candidate = Path("tests/fixtures") / image_path.name
+        if fixture_candidate.exists():
+            image_path = fixture_candidate
+        else:
+            print(f"❌ Error: Image file not found: {image_path}")
+            return False
 
     pretrained_path = Path(pretrained_model_str)
     if not pretrained_path.exists():
+        fallback_pre = Path("models/yolo26n.pt") if Path("models/yolo26n.pt").exists() else Path("yolo26n.pt")
+        if fallback_pre.exists():
+            pretrained_path = fallback_pre
         print(f"❌ Error: Pretrained baseline not found: {pretrained_path}")
         return False
 

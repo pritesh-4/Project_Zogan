@@ -23,24 +23,32 @@ Usage:
 =============================================================================
 """
 
+import subprocess
 import sys
 import time
-import subprocess
 from pathlib import Path
+
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import cv2
+import numpy as np
+from ultralytics import YOLO
+import scripts.run_camera as ec
 
 # Ensure UTF-8 output on Windows
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import cv2
-import numpy as np
-from ultralytics import YOLO
-import elephant_camera as ec
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+FIXTURE_IMAGE = str(Path(__file__).resolve().parent / "fixtures" / "elephant.jpg")
 
 
-def run_cmd(cmd_list):
+def run_cmd(cmd_list, cwd=None):
     res = subprocess.run(
         cmd_list,
+        cwd=cwd or REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -96,7 +104,7 @@ def test_missing_model_handling():
 
 def test_predict_custom():
     print("\n--- TEST 5: Single Image Custom Prediction ---")
-    code, stdout, stderr = run_cmd([sys.executable, "ai/predict_custom.py", "elephant.jpg", "--no-show"])
+    code, stdout, stderr = run_cmd([sys.executable, "ai/predict_custom.py", FIXTURE_IMAGE, "--no-show"])
     print(stdout)
     assert code == 0, f"predict_custom.py failed! Code: {code}\n{stderr}"
     assert "ELEPHANT DETECTED!" in stdout
@@ -105,7 +113,7 @@ def test_predict_custom():
 
 def test_compare_models():
     print("\n--- TEST 6: Model Comparison Script ---")
-    code, stdout, stderr = run_cmd([sys.executable, "ai/compare_models.py", "elephant.jpg", "--no-show"])
+    code, stdout, stderr = run_cmd([sys.executable, "ai/compare_models.py", FIXTURE_IMAGE, "--no-show"])
     print(stdout)
     assert code == 0, f"compare_models.py failed! Code: {code}\n{stderr}"
     assert "MODEL COMPARISON RESULTS" in stdout
@@ -119,8 +127,8 @@ def test_live_detection_pipeline_with_custom_model():
     weights_path, model_label = ec.resolve_active_model(use_custom=True)
     model = YOLO(weights_path)
 
-    img = cv2.imread("elephant.jpg")
-    assert img is not None, "Failed to load elephant.jpg"
+    img = cv2.imread(FIXTURE_IMAGE)
+    assert img is not None, f"Failed to load {FIXTURE_IMAGE}"
 
     # 1. Detection on elephant image
     results = model(img, verbose=False)
@@ -198,7 +206,8 @@ def test_live_detection_pipeline_with_custom_model():
 
 def test_phase2_regression():
     print("\n--- TEST 8: Phase 2 Backward Compatibility ---")
-    code, stdout, stderr = run_cmd([sys.executable, "test_phase2.py"])
+    phase2_script = str(Path(__file__).resolve().parent / "test_phase2.py")
+    code, stdout, stderr = run_cmd([sys.executable, phase2_script])
     print(stdout)
     assert code == 0, f"test_phase2.py failed! Code: {code}\n{stderr}"
     assert "ALL TESTS PASSED SUCCESSFULLY!" in stdout

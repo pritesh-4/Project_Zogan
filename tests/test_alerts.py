@@ -59,7 +59,7 @@ from alerts.telegram import (
     send_telegram_alert,
     send_telegram_message,
 )
-import elephant_camera as ec
+import scripts.run_camera as ec
 
 
 # ---------------------------------------------------------------------------

@@ -20,14 +20,14 @@ from pathlib import Path
 # =============================================================================
 # 📁 PROJECT PATHS
 # =============================================================================
-PROJECT_ROOT: Path = Path(__file__).resolve().parent
+PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
 
 # =============================================================================
 # 🤖 MODEL CONFIGURATION
 # =============================================================================
 CUSTOM_MODEL_PATH: str = "models/elephant_v1/best.pt"
 FALLBACK_CUSTOM_PATH: str = "runs/detect/elephant_v1/weights/best.pt"
-PRETRAINED_MODEL_PATH: str = "yolo26n.pt"
+PRETRAINED_MODEL_PATH: str = "models/yolo26n.pt"
 USE_CUSTOM_MODEL: bool = True
 
 # Target class name to monitor

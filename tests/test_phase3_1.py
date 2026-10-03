@@ -23,26 +23,31 @@ Usage:
 =============================================================================
 """
 
-import sys
 import shutil
-import tempfile
 import subprocess
+import sys
+import tempfile
 from pathlib import Path
+
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import cv2
+import numpy as np
+import yaml
 
 # Ensure UTF-8 output
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import yaml
-import cv2
-import numpy as np
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def run_cmd(cmd_list, cwd=None):
     """Executes a subprocess command and returns (returncode, stdout, stderr)."""
     res = subprocess.run(
         cmd_list,
-        cwd=cwd or Path.cwd(),
+        cwd=cwd or REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

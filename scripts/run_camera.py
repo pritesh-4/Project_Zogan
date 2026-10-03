@@ -29,11 +29,11 @@ Pipeline:
   LOCAL LOG (JSONL) + TELEGRAM (if configured)
 
 Usage:
-    python elephant_camera.py                           # Live webcam (default)
-    python elephant_camera.py --source elephant.mp4     # Video file replay
-    python elephant_camera.py --pretrained              # Pretrained baseline
-    python elephant_camera.py --model path/to/model.pt  # Custom weights
-    python elephant_camera.py --sim-lat 20.1205 --sim-lon 85.1205
+    python scripts/run_camera.py                           # Live webcam (default)
+    python scripts/run_camera.py --source elephant.mp4     # Video file replay
+    python scripts/run_camera.py --pretrained              # Pretrained baseline
+    python scripts/run_camera.py --model path/to/model.pt  # Custom weights
+    python scripts/run_camera.py --sim-lat 20.1205 --sim-lon 85.1205
 
 Controls:
     Press 'Q' or 'q' to exit safely.
@@ -43,12 +43,15 @@ Controls:
 =============================================================================
 """
 
-import sys
-import time
 import argparse
 import math
 import random
+import sys
+import time
 from pathlib import Path
+
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import cv2
 
@@ -280,7 +283,7 @@ def main(
         print("\n" + "=" * 60)
         print("ERROR: Model not found.")
         print(f"Expected: {config.CUSTOM_MODEL_PATH} or {config.FALLBACK_CUSTOM_PATH}")
-        print("Train first (python ai/train.py) or use: python elephant_camera.py --pretrained")
+        print("Train first (python ai/train.py) or use: python scripts/run_camera.py --pretrained")
         print("=" * 60 + "\n")
         return False
 

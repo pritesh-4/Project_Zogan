@@ -18,21 +18,27 @@ Usage:
 =============================================================================
 """
 
-import sys
 import json
 import subprocess
+import sys
 from pathlib import Path
+
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import cv2
 
 # Ensure UTF-8 output
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-import cv2
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
-def run_cmd(cmd_list):
+def run_cmd(cmd_list, cwd=None):
     res = subprocess.run(
         cmd_list,
+        cwd=cwd or REPO_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -173,7 +179,8 @@ def test_validation_script():
 
 def test_phase2_backward_compatibility():
     print("\n--- TEST 7: Phase 2 Backward Compatibility ---")
-    code, stdout, stderr = run_cmd([sys.executable, "test_phase2.py"])
+    phase2_script = str(Path(__file__).resolve().parent / "test_phase2.py")
+    code, stdout, stderr = run_cmd([sys.executable, phase2_script])
     assert code == 0, f"Phase 2 test failed! Exit code: {code}\n{stderr}"
     assert "ALL TESTS PASSED SUCCESSFULLY!" in stdout
     print("✓ Phase 2 pipeline intact and verified.")

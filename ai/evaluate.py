@@ -34,7 +34,7 @@ from ultralytics import YOLO
 DEFAULT_WEIGHTS = Path("runs/detect/elephant_v1/weights/best.pt")
 FALLBACK_WEIGHTS = Path("models/elephant_v1/best.pt")
 DEFAULT_DATA = Path("datasets/elephant/data.yaml")
-BASELINE_MODEL = Path("yolo26n.pt")
+BASELINE_MODEL = Path("models/yolo26n.pt") if Path("models/yolo26n.pt").exists() else Path("yolo26n.pt")
 
 
 def resolve_weights(weights_arg: str = None) -> Path:

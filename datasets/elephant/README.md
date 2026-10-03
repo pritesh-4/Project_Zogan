@@ -89,7 +89,7 @@ datasets/
 To prevent optimistic bias and data leakage:
 * The training, validation, and test splits are **completely disjoint** sets of images.
 * Sequential and related shots from the same source sessions remain confined within their respective split.
-* Verified via [`test_phase3_2.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/test_phase3_2.py): 0 overlapping image stems exist between `train`, `val`, and `test`.
+* Verified via [`tests/test_phase3_2.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/tests/test_phase3_2.py): 0 overlapping image stems exist between `train`, `val`, and `test`.
 
 ---
 
@@ -168,9 +168,9 @@ Before finalizing the dataset, the following quality checks were executed and pa
    * Herd scenes correctly annotate individual animals separately (up to 14 elephants in a single frame).
    * Background samples correctly register as 0-box scenes.
 3. **Automated Pipeline Tests**:
-   Both [`test_phase3_1.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/test_phase3_1.py) and [`test_phase3_2.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/test_phase3_2.py) pass with 100% success.
+   Both [`tests/test_phase3_1.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/tests/test_phase3_1.py) and [`tests/test_phase3_2.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/tests/test_phase3_2.py) pass with 100% success.
 4. **Phase 2 Non-Regression**:
-   [`test_phase2.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/test_phase2.py) passes with zero regression.
+   [`tests/test_phase2.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/tests/test_phase2.py) passes with zero regression.
 
 ---
 

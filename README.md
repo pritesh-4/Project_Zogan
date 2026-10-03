@@ -86,71 +86,92 @@ Project Zogan has implemented a reliable **Alert-Event Logging & Remote Notifica
 
 ```text
 Elephant_detector/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 # GitHub Actions continuous integration pipeline
 │
-├── config.py                 # Central configuration for models, thresholds, GPS, zones, and alerts
-├── elephant_camera.py        # Main real-time detection, tracking & risk orchestrator
+├── ai/                            # AI/ML core detection, tracking, spatial, and training modules
+│   ├── __init__.py                # Package exports and module definitions
+│   ├── compare_models.py          # Side-by-side inference comparison utility
+│   ├── detector.py                # Detector abstraction and dataclass interfaces
+│   ├── evaluate.py                # Model evaluation with dynamic dataset calculation
+│   ├── geofence.py                # Haversine geodesic distance and zone classification
+│   ├── model_manager.py           # Model path resolution, fallback, and validation
+│   ├── predict_custom.py          # Single-image custom model prediction CLI
+│   ├── renderer.py                # Visual rendering: bounding boxes, HUD, alerts
+│   ├── risk_engine.py             # Rule-based early warning risk assessment heuristics
+│   ├── simulate_risk.py           # Spatial trajectory and approach risk simulation demo
+│   ├── tracker.py                 # Tracking alias module exposing tracker interface
+│   ├── tracking.py                # ByteTrack multi-object tracking and movement estimation
+│   ├── train.py                   # Transfer learning fine-tuning pipeline
+│   ├── validate_dataset.py        # Dataset structure and annotation integrity validator
+│   └── visualize_dataset.py       # Ground-truth annotation visualizer
 │
-├── ai/                       # AI core package
-│   ├── __init__.py           # Package initialization and exports
-│   ├── detector.py           # Core detection and class filtering logic
-│   ├── model_manager.py      # Model path resolution, fallback, and validation
-│   ├── renderer.py           # OpenCV bounding box, HUD, trajectory, and alert banner rendering
-│   ├── tracking.py           # ByteTrack tracker, trajectory history, and movement analysis
-│   ├── geofence.py           # Geofencing, Haversine geodesic distance, and zone classification
-│   ├── risk_engine.py        # Rule-based early-warning risk scoring engine
-│   ├── simulate_risk.py      # Trajectory and approach risk simulation utility
-│   ├── train.py              # Transfer learning fine-tuning script
-│   ├── evaluate.py           # Dynamic model evaluation, mAP reporting, and prediction generator
-│   ├── predict_custom.py     # Single-image inference CLI using custom elephant model
-│   ├── compare_models.py     # Side-by-side comparison between baseline and custom models
-│   ├── validate_dataset.py   # Dataset structure and annotation validation utility
-│   └── visualize_dataset.py  # Visual inspection tool for YOLO labels and bounding boxes
+├── alerts/                        # Alerting and incident notification subsystem
+│   ├── __init__.py                # Package exports for alerts layer
+│   ├── dispatcher.py              # Unified dispatcher (local JSON Lines + Telegram)
+│   ├── event_logger.py            # Append-only JSON Lines event logger (logs/alerts.jsonl)
+│   ├── history.py                 # Incident query, filtering, and latest-alert reader
+│   ├── history_cli.py             # Command-line inspection tool for alert events
+│   ├── models.py                  # Structured AlertEvent model and factory function
+│   └── telegram.py                # Telegram Bot API notification client
 │
-├── alerts/                   # Alerting & notification subsystem
-│   ├── __init__.py           # Package exports for models, logger, history, telegram, and dispatcher
-│   ├── models.py             # Structured AlertEvent model and factory function
-│   ├── event_logger.py       # Safe JSON Lines local logger (logs/alerts.jsonl)
-│   ├── history.py            # Alert querying, filtering, counting, and latest-alert reader
-│   ├── history_cli.py        # Command-line interface for inspecting alert logs
-│   ├── telegram.py           # Telegram Bot API integration and formatted notifications
-│   └── dispatcher.py         # Unified fail-safe alert dispatcher (logs locally + Telegram)
+├── config/                        # Application configuration and settings
+│   ├── __init__.py                # Re-exports settings for convenient access
+│   ├── settings.py                # Central system parameters, thresholds, and paths
+│   └── zones.example.yaml         # Example YAML schema for spatial zone perimeters
 │
-├── datasets/
+├── datasets/                      # Training, validation, and evaluation datasets
 │   └── elephant/
-│       ├── images/           # Images organized by split (train: 315, val: 68, test: 73)
-│       ├── labels/           # Matching YOLO label text files (train: 315, val: 68, test: 73)
-│       ├── data.yaml         # Dataset configuration file for Ultralytics YOLO
-│       ├── metadata.json     # Dataset manifest and original source tracking
-│       └── README.md         # Comprehensive dataset & YOLO annotation guide
+│       ├── images/                # Disjoint dataset images (train: 315, val: 68, test: 73)
+│       ├── labels/                # Matching YOLO annotation files (train: 315, val: 68, test: 73)
+│       ├── data.yaml              # Ultralytics dataset configuration file
+│       ├── metadata.json          # Dataset manifest and split provenance
+│       └── README.md              # Dataset documentation and YOLO annotation guide
 │
-├── models/
-│   ├── README.md             # Model changelog, deployment specifications, and version guide
+├── docs/                          # Comprehensive project documentation
+│   ├── ARCHITECTURE.md            # System architecture and engineering specifications
+│   ├── AUDIT_REPORT.md            # Comprehensive engineering audit report
+│   ├── CHANGELOG.md               # Version changelog and migration notes
+│   ├── CONTRIBUTING.md            # Contributor guidelines and quality standards
+│   └── PROJECT_STRUCTURE.md       # Repository layout and module responsibilities
+│
+├── logs/                          # Runtime log directories
+│   ├── .gitkeep                   # Directory placeholder
+│   └── alerts.jsonl               # Runtime alert event log (gitignored)
+│
+├── models/                        # Trained model checkpoints and baseline weights
+│   ├── README.md                  # Model catalog, evaluation benchmarks, and deployment notes
+│   ├── yolo26n.pt                 # Pretrained COCO baseline weights
 │   └── elephant_v1/
-│       ├── best.pt           # Fine-tuned custom elephant model weights
-│       └── README.md         # Experiment notes
+│       ├── best.pt                # Custom fine-tuned elephant detector weights
+│       └── README.md              # Version-specific training and performance notes
 │
-├── scripts/
-│   └── health_check.py       # Real system diagnostic & environment verification script
+├── scripts/                       # Executable entrypoints and CLI utilities
+│   ├── __init__.py                # Package initialization for scripts
+│   ├── detect_image.py            # User-friendly single-image detection CLI
+│   ├── health_check.py            # Comprehensive system diagnostic and pre-flight check
+│   └── run_camera.py              # Main real-time detection, tracking & risk orchestrator
 │
-├── tests/
-│   ├── __init__.py           # Tests package initialization
-│   └── test_alerts.py        # Pytest alert subsystem verification suite
+├── tests/                         # Automated test suite and test fixtures
+│   ├── __init__.py                # Tests package initialization
+│   ├── fixtures/
+│   │   └── elephant.jpg           # Standard test fixture image
+│   ├── test_alerts.py             # Alert subsystem pytest suite
+│   ├── test_phase2.py             # Phase 2 test suite (Persistence & Cooldown)
+│   ├── test_phase3_1.py           # Phase 3.1 test suite (Dataset Structure & Validator)
+│   ├── test_phase3_2.py           # Phase 3.2 test suite (Data Integrity & Splits)
+│   ├── test_phase3_4.py           # Phase 3.4 test suite (Custom Model Pipeline)
+│   ├── test_phase4.py             # Phase 4 test suite (ByteTrack Tracking & Motion)
+│   ├── test_phase5.py             # Phase 5 test suite (Geofencing & Risk Engine)
+│   └── test_phase6.py             # Phase 6 test suite (Event Logging & Telegram Dispatcher)
 │
-├── test_phase2.py            # Verification test suite for Phase 2 (Persistence & Cooldown)
-├── test_phase3_1.py          # Verification test suite for Phase 3.1 (Dataset Structure)
-├── test_phase3_2.py          # Verification test suite for Phase 3.2 (Data Integrity)
-├── test_phase3_4.py          # Verification test suite for Phase 3.4 (Custom Model Pipeline)
-├── test_phase4.py            # Verification test suite for Phase 4 (ByteTrack Tracking)
-├── test_phase5.py            # Verification test suite for Phase 5 (Geofencing & Risk Engine)
-├── test_phase6.py            # Verification test suite for Phase 6 (Alert Logging & Dispatcher)
-│
-├── .env.example              # Template for environment variables (Telegram Bot Token & Chat ID)
-├── elephant.jpg              # Sample test image
-├── yolo26n.pt                # Pretrained base YOLO model weights
-├── requirements.txt          # Production dependencies
-├── requirements-dev.txt      # Development & testing dependencies
-├── pyproject.toml            # Project tool configurations (Ruff, Pytest)
-└── README.md                 # Project documentation and roadmap
+├── .env.example                   # Environment variable template for credentials
+├── .gitignore                     # Git exclusion rules
+├── pyproject.toml                 # Tool configurations (Ruff, Pytest)
+├── README.md                      # Primary project overview and quickstart guide
+├── requirements.txt               # Runtime production dependencies
+└── requirements-dev.txt           # Testing and development dependencies
 ```
 
 ---
@@ -189,7 +210,7 @@ python -m pip install -r requirements.txt
 Launch the real-time webcam elephant detector:
 
 ```powershell
-python elephant_camera.py
+python scripts/run_camera.py
 ```
 
 ### Controls & Features
@@ -216,19 +237,23 @@ python elephant_camera.py
 To run detection on a single image file with annotated visualization:
 
 ```powershell
-python ai/predict_custom.py elephant.jpg
+python scripts/detect_image.py tests/fixtures/elephant.jpg
+```
+Or via the AI prediction module directly:
+```powershell
+python ai/predict_custom.py tests/fixtures/elephant.jpg
 ```
 
 ## Running the Custom Model
 
 When custom-model mode is enabled, Project Zogan's live detector loads our validated, specialized model:
-`runs/detect/elephant_v1/weights/best.pt` (or `models/elephant_v1/best.pt`).
+`models/elephant_v1/best.pt` (or `runs/detect/elephant_v1/weights/best.pt`).
 
 ### A. Real-Time Detection with Custom Model (Live Detector)
-By default, [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py) now automatically loads our custom fine-tuned model (`elephant_v1`):
+By default, [`scripts/run_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/scripts/run_camera.py) automatically loads our custom fine-tuned model (`elephant_v1`):
 
 ```powershell
-python elephant_camera.py
+python scripts/run_camera.py
 ```
 
 At startup, the detector displays:
@@ -245,25 +270,25 @@ Alert Cooldown: 30s
 ```
 
 ### B. Switching Back to Pretrained Model
-To run side-by-side A/B testing or switch back to the generic COCO pretrained model (`yolo26n.pt`):
+To run side-by-side A/B testing or switch back to the generic COCO pretrained model (`models/yolo26n.pt`):
 
 ```powershell
-python elephant_camera.py --pretrained
+python scripts/run_camera.py --pretrained
 ```
-Alternatively, set `USE_CUSTOM_MODEL = False` in [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py).
+Alternatively, set `USE_CUSTOM_MODEL = False` in [`config/settings.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/config/settings.py).
 
 ### C. Single Image Custom Prediction
 Run detection on any test image using our custom model directly:
 
 ```powershell
-python ai/predict_custom.py elephant.jpg
+python ai/predict_custom.py tests/fixtures/elephant.jpg
 ```
 
 ### D. Side-by-Side Model Comparison
-Compare detections, confidences, and inference latencies between baseline `yolo26n.pt` and custom `elephant_v1` on the exact same image:
+Compare detections, confidences, and inference latencies between baseline `models/yolo26n.pt` and custom `elephant_v1` on the exact same image:
 
 ```powershell
-python ai/compare_models.py elephant.jpg
+python ai/compare_models.py tests/fixtures/elephant.jpg
 ```
 
 ### E. Model Training & Evaluation Pipeline
@@ -273,7 +298,7 @@ To retrain or re-evaluate the custom model:
 # Validate dataset integrity
 python ai/validate_dataset.py
 
-# Train custom model (transfer learning from yolo26n.pt)
+# Train custom model (transfer learning from models/yolo26n.pt)
 python ai/train.py --epochs 15 --imgsz 416 --batch 16
 
 # Evaluate on validation and unseen test sets
@@ -287,51 +312,58 @@ python ai/evaluate.py
 To verify Phase 2 real-time detection, persistence, cooldown, and HUD rendering:
 
 ```powershell
-python test_phase2.py
+python tests/test_phase2.py
 ```
 
 To verify Phase 3.1 dataset infrastructure, YAML configuration, and validator error handling:
 
 ```powershell
-python test_phase3_1.py
+python tests/test_phase3_1.py
 ```
 
 To verify Phase 3.2 custom dataset integrity, counts, zero leakage, decoding, and labels:
 
 ```powershell
-python test_phase3_2.py
+python tests/test_phase3_2.py
 ```
 
 To verify Phase 3.4 custom model integration, model switching, class mapping, and end-to-end pipeline:
 
 ```powershell
-python test_phase3_4.py
+python tests/test_phase3_4.py
 ```
 
 To verify Phase 4 object tracking, track IDs, center points, bounded history, image-space movement, anti-jitter threshold, multi-elephant tracking, and lost-track expiration:
 
 ```powershell
-python test_phase4.py
+python tests/test_phase4.py
 ```
 
 To verify Phase 5 geofencing, Haversine geodesic distance, zone classification, approach/recede trends, and rule-based risk evaluation:
 
 ```powershell
-python test_phase5.py
+python tests/test_phase5.py
+```
+
+To verify Phase 6 alert event logging, Telegram dispatch, and history querying:
+
+```powershell
+python tests/test_phase6.py
+python -m pytest tests/test_alerts.py
 ```
 
 ---
 
 # ⚙️ Configuration
 
-All key parameters are easily configurable at the top of [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py):
+All key parameters are easily configurable in [`config/settings.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/config/settings.py):
 
 ```python
 # Model selection configuration
 USE_CUSTOM_MODEL = True
 CUSTOM_MODEL_PATH = "models/elephant_v1/best.pt"
 FALLBACK_MODEL_PATH = "runs/detect/elephant_v1/weights/best.pt"
-PRETRAINED_MODEL_PATH = "yolo26n.pt"
+PRETRAINED_MODEL_PATH = "models/yolo26n.pt"
 
 # Minimum confidence required to accept an elephant detection (70%)
 CONFIDENCE_THRESHOLD = 0.70
@@ -432,7 +464,7 @@ This allows us to maintain position history, suppress bounding box jitter, and a
 * **Lost-Track Tolerance**: Tolerates temporary occlusions or dropped detections for up to 30 frames (`track_buffer = 30`) before cleanly evicting expired tracks.
 * **Video File Replay Option**: Process recorded video files for repeatable verification:
   ```powershell
-  python elephant_camera.py --source elephant_video.mp4
+  python scripts/run_camera.py --source elephant_video.mp4
   ```
 
 ---
@@ -742,13 +774,14 @@ ruff check --fix .
 python ai/validate_dataset.py
 
 # 6. Run automated test suites (Headless & Safe)
-python test_phase2.py
-python test_phase3_1.py
-python test_phase3_2.py
-python test_phase3_4.py
-python test_phase4.py
-python test_phase5.py
-python test_phase6.py
+python tests/test_phase2.py
+python tests/test_phase3_1.py
+python tests/test_phase3_2.py
+python tests/test_phase3_4.py
+python tests/test_phase4.py
+python tests/test_phase5.py
+python tests/test_phase6.py
+python -m pytest tests/test_alerts.py
 python ai/simulate_risk.py
 ```
 
@@ -780,9 +813,19 @@ feature/branch ──► Pull Request ──► GitHub Actions CI ──► Requ
 
 ---
 
+## 📚 Project Documentation
+
+* [System Architecture](docs/ARCHITECTURE.md) — Technical pipeline, layers, and class interactions.
+* [Repository Structure](docs/PROJECT_STRUCTURE.md) — Standardized directory layout and module responsibilities.
+* [Audit Report](docs/AUDIT_REPORT.md) — Comprehensive engineering audit findings and remediation records.
+* [Changelog](docs/CHANGELOG.md) — Chronological log of versions, fixes, and improvements.
+* [Contributing Guidelines](docs/CONTRIBUTING.md) — Development workflow, pull requests, and coding standards.
+
+---
+
 ## ⭐ Contributing & License
 
 This project is built for **wildlife conservation, human-wildlife conflict mitigation, and community safety**.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for branch guidelines, setup instructions, and contribution best practices.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for branch guidelines, setup instructions, and contribution best practices.
 

@@ -46,12 +46,14 @@ ruff format --check .
 python ai/validate_dataset.py
 
 # 5. Run automated test suites
-python test_phase2.py
-python test_phase3_1.py
-python test_phase3_2.py
-python test_phase3_4.py
-python test_phase4.py
-python test_phase5.py
+python tests/test_phase2.py
+python tests/test_phase3_1.py
+python tests/test_phase3_2.py
+python tests/test_phase3_4.py
+python tests/test_phase4.py
+python tests/test_phase5.py
+python tests/test_phase6.py
+python -m pytest tests/test_alerts.py
 python ai/simulate_risk.py
 ```
 

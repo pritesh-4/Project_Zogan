@@ -1,0 +1,51 @@
+# =============================================================================
+# 🐘 PROJECT ZOGAN — GEOFENCING ZONE CONFIGURATION (EXAMPLE)
+# =============================================================================
+# This file provides an example YAML schema for defining spatial monitoring
+# perimeters around human settlements. In hardware deployments, this replaces
+# default coordinates in config/settings.py.
+#
+# ⚠️ All coordinates are synthetic demo locations. Replace with verified
+# field coordinates before production deployment.
+# =============================================================================
+
+version: "1.0"
+site_name: "Simulated Village Settlement Corridor"
+
+# Camera sensor location (simulated reference point)
+camera:
+  latitude: 20.123456
+  longitude: 85.123456
+  heading_degrees: 0.0  # North-facing
+
+# Monitored zones evaluated in priority order (Village > Buffer > Forest)
+zones:
+  - name: "Village Settlement Zone"
+    type: "VILLAGE"
+    geometry: "circle"
+    priority: 3
+    center:
+      latitude: 20.119000
+      longitude: 85.119000
+    radius_meters: 300.0
+    description: "High-priority human settlement and agriculture perimeter"
+
+  - name: "Buffer Warning Zone"
+    type: "BUFFER"
+    geometry: "circle"
+    priority: 2
+    center:
+      latitude: 20.119000
+      longitude: 85.119000
+    radius_meters: 800.0
+    description: "Intermediate warning corridor between forest and village"
+
+  - name: "Forest Monitoring Zone"
+    type: "FOREST"
+    geometry: "circle"
+    priority: 1
+    center:
+      latitude: 20.119000
+      longitude: 85.119000
+    radius_meters: 2000.0
+    description: "Natural wildlife forest habitat monitoring boundary"

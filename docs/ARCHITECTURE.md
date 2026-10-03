@@ -28,12 +28,12 @@ graph TD
         VID["Recorded Video File (.mp4 / .avi)"] --> ORCH
     end
 
-    subgraph Core ["Orchestration & Detection (elephant_camera.py)"]
+    subgraph Core ["Orchestration & Detection (scripts/run_camera.py)"]
         ORCH["Main Loop Orchestrator"]
         MM["ai.model_manager<br/>(resolve_model_path)"] --> ORCH
-        CFG["config.py<br/>(Central Settings)"] --> ORCH
+        CFG["config/<br/>(Central Settings)"] --> ORCH
         DET["ai.detector<br/>(Detector Abstraction)"] --> ORCH
-        YOLO["Ultralytics YOLO<br/>(elephant_v1 / yolo26n.pt)"] --- DET
+        YOLO["Ultralytics YOLO<br/>(elephant_v1 / models/yolo26n.pt)"] --- DET
     end
 
     subgraph TrackingLayer ["Tracking & Motion Analysis"]
@@ -69,11 +69,11 @@ graph TD
 
 ## 3. Modular Architecture Breakdown
 
-Prior to this engineering refactor, `elephant_camera.py` was a monolithic 987-line God Script mixing model loading, inference, tracking, geofencing, rendering, alerting, and configuration. The system is now structured into modular, decoupled packages:
+Prior to this engineering refactor, the orchestrator was a monolithic 987-line God Script mixing model loading, inference, tracking, geofencing, rendering, alerting, and configuration. The system is now structured into modular, decoupled packages:
 
-### A. Central Configuration (`config.py`)
+### A. Central Configuration (`config/settings.py`)
 Single source of truth for all operating parameters:
-* **Model settings**: Model paths (`models/elephant_v1/best.pt`, `yolo26n.pt`), fallback paths, target class.
+* **Model settings**: Model paths (`models/elephant_v1/best.pt`, `models/yolo26n.pt`), fallback paths, target class.
 * **Detection parameters**: Confidence threshold (`0.70`), required detection persistence (`5` frames), minimum pixel area (`400` px).
 * **Alert parameters**: Cooldown duration (`30` seconds), banner display duration (`4.0` seconds).
 * **Geolocation defaults**: Simulated camera coordinates (`20.123456, 85.123456`), village center, zone radii (Village: 300m, Buffer: 800m, Forest: 2000m).

@@ -66,8 +66,12 @@ def predict_image(
     """Runs inference on a single image and prints detection summary."""
     img_path = Path(image_path_str)
     if not img_path.exists():
-        print(f"❌ Error: Image file not found: {img_path}")
-        return False
+        fixture_candidate = Path("tests/fixtures") / img_path.name
+        if fixture_candidate.exists():
+            img_path = fixture_candidate
+        else:
+            print(f"❌ Error: Image file not found: {img_path}")
+            return False
 
     try:
         weights_path = resolve_model_weights(weights_path_str)

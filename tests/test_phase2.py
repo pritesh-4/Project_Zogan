@@ -7,13 +7,21 @@ Test script for verifying Phase 2 Elephant Detector logic:
 - HUD and bounding box rendering
 """
 
+import sys
 import time
+from pathlib import Path
+
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import cv2
 import numpy as np
 from ultralytics import YOLO
 
-# Import functions and constants from elephant_camera
-import elephant_camera as ec
+# Import functions and constants from scripts.run_camera
+import scripts.run_camera as ec
+
+FIXTURE_IMAGE = Path(__file__).resolve().parent / "fixtures" / "elephant.jpg"
 
 
 def test_pipeline():
@@ -23,8 +31,8 @@ def test_pipeline():
     print("✓ YOLO model loaded successfully.")
 
     print("\n=== TEST 2: Detection on elephant.jpg ===")
-    img = cv2.imread("elephant.jpg")
-    assert img is not None, "Failed to load elephant.jpg"
+    img = cv2.imread(str(FIXTURE_IMAGE))
+    assert img is not None, f"Failed to load {FIXTURE_IMAGE}"
 
     results = model(img, verbose=False)
     elephant_detected = False

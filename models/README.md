@@ -5,6 +5,7 @@ This directory manages trained, fine-tuned, and deployed model checkpoints for P
 ```text
 models/
 ├── README.md              # Model changelog, specifications, and deployment guide
+├── yolo26n.pt             # Pretrained baseline weights
 └── elephant_v1/
     ├── best.pt            # Deployed fine-tuned custom elephant model weights
     └── README.md          # Experiment-specific documentation
@@ -47,10 +48,10 @@ models/
 
 ---
 
-## 🔄 How to Switch Models in `elephant_camera.py`
+## 🔄 How to Switch Models in `scripts/run_camera.py`
 
 ### Option A: Configuration Flag (Code)
-In [`elephant_camera.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/elephant_camera.py):
+In [`config/settings.py`](file:///c:/Users/HP/Documents/c_programm/Projects/Elephant_detector/config/settings.py):
 ```python
 # Set True for custom fine-tuned model (default)
 USE_CUSTOM_MODEL = True
@@ -62,13 +63,13 @@ USE_CUSTOM_MODEL = False
 ### Option B: Command-Line Flag (CLI)
 ```powershell
 # Run with custom model (default)
-python elephant_camera.py
+python scripts/run_camera.py
 
 # Force fallback to pretrained model
-python elephant_camera.py --pretrained
+python scripts/run_camera.py --pretrained
 
 # Explicit weights path
-python elephant_camera.py --model models/elephant_v1/best.pt
+python scripts/run_camera.py --model models/elephant_v1/best.pt
 ```
 
 ---

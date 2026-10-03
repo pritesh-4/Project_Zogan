@@ -26,13 +26,17 @@ Usage:
 
 import sys
 import time
+from pathlib import Path
 
 # Ensure UTF-8 output on Windows
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 # Project modules
-import elephant_camera as ec
+import scripts.run_camera as ec
 from ai.geofence import (
     GeoZone,
     calculate_distance,

@@ -38,6 +38,9 @@ from unittest.mock import MagicMock, patch
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 # Project imports
 from alerts.dispatcher import dispatch_alert
 from alerts.event_logger import AlertEventLogger
@@ -52,7 +55,7 @@ from alerts.telegram import (
     send_telegram_alert,
     send_telegram_message,
 )
-import elephant_camera as ec
+import scripts.run_camera as ec
 
 
 def test_alert_event_model():

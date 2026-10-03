@@ -32,11 +32,14 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+# Ensure repository root is on sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import cv2
 from ultralytics import YOLO
 
 # Project modules
-import elephant_camera as ec
+import scripts.run_camera as ec
 from ai.tracking import (
     ElephantTracker,
     TrackedElephant,
@@ -288,8 +291,9 @@ def test_end_to_end_tracking_pipeline():
     print("\n--- TEST 13: End-to-End Tracking Pipeline with YOLO Model ---")
     weights_path, model_label = ec.resolve_active_model(use_custom=True)
     model = YOLO(weights_path)
-    img = cv2.imread("elephant.jpg")
-    assert img is not None, "Failed to load elephant.jpg"
+    fixture_image = str(Path(__file__).resolve().parent / "fixtures" / "elephant.jpg")
+    img = cv2.imread(fixture_image)
+    assert img is not None, f"Failed to load {fixture_image}"
 
     # Run tracking across two consecutive simulated frames
     tracker = ElephantTracker(movement_threshold=10.0)
@@ -350,8 +354,9 @@ def test_video_replay_option():
     print("\n--- TEST 14: Video File Replay & CLI Source Option ---")
     # Test that elephant_camera.py can be invoked with --source and --no-show
     # Create a 5-frame synthetic test video using elephant.jpg
-    img = cv2.imread("elephant.jpg")
-    assert img is not None
+    fixture_image = str(Path(__file__).resolve().parent / "fixtures" / "elephant.jpg")
+    img = cv2.imread(fixture_image)
+    assert img is not None, f"Failed to load {fixture_image}"
     h, w = img.shape[:2]
     video_path = "scratch_test_video.mp4"
 

@@ -45,7 +45,7 @@ from validate_dataset import DatasetValidator
 # ⚙️ CONFIGURATION PARAMETERS (Defaults)
 # =============================================================================
 
-MODEL_PATH = "yolo26n.pt"
+MODEL_PATH = "models/yolo26n.pt" if Path("models/yolo26n.pt").exists() else "yolo26n.pt"
 DATASET_PATH = "datasets/elephant/data.yaml"
 EPOCHS = 15  # Transfer learning converges rapidly from pretrained weights
 IMAGE_SIZE = 416  # High-throughput resolution for CPU/Edge; use 640 for GPU
@@ -64,7 +64,7 @@ def run_preflight_checks(model_path: Path, data_path: Path) -> bool:
     # 1. Check pretrained model
     if not model_path.exists():
         print(f"❌ Error: Pretrained model weights not found at: {model_path}")
-        print("   Please ensure yolo26n.pt is in the project root directory.")
+        print("   Please ensure yolo26n.pt is in the models/ directory.")
         return False
     print(f"[OK] Pretrained base model found: {model_path}")
 
