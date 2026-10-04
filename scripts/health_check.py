@@ -157,6 +157,48 @@ def check_gps() -> str:
     return "UNAVAILABLE (no hardware GPS)"
 
 
+def check_risk_engine() -> str:
+    try:
+        from ai.geofence import ZONE_TYPE_WARNING
+        from ai.risk_engine import RiskEngine, TREND_APPROACHING
+
+        engine = RiskEngine()
+        assessment = engine.evaluate(ZONE_TYPE_WARNING, 350.0, TREND_APPROACHING, 1, 0.90, persistence_frames=5)
+        return f"OK (Score={assessment.score}, Level={assessment.level})"
+    except Exception as e:
+        return f"ERROR ({e})"
+
+
+def check_health_monitor() -> str:
+    try:
+        from monitoring import SystemHealthMonitor
+
+        monitor = SystemHealthMonitor()
+        monitor.record_camera_open(True)
+        monitor.record_detector_status("READY")
+        monitor.record_tracker_status("READY")
+        monitor.record_risk_engine_status("READY")
+        monitor.record_frame_read(True)
+        snapshot = monitor.evaluate()
+        return f"OK (Status={snapshot.overall_status})"
+    except Exception as e:
+        return f"ERROR ({e})"
+
+
+def check_offline_queue() -> str:
+    try:
+        import config
+        from alerts.queue import PersistentAlertQueue
+
+        if not getattr(config, "OFFLINE_QUEUE_ENABLED", True):
+            return "DISABLED (disabled in config)"
+        queue = PersistentAlertQueue()
+        pending = queue.pending_count
+        return f"OK ({pending} pending, max={getattr(config, 'ALERT_QUEUE_MAX_SIZE', 100)})"
+    except Exception as e:
+        return f"ERROR ({e})"
+
+
 def run_health_check() -> bool:
     """Runs all health checks and prints a formatted report."""
     print()
@@ -172,6 +214,9 @@ def run_health_check() -> bool:
         ("Model Class", check_model_class),
         ("Config", check_config),
         ("Dataset", check_dataset),
+        ("Risk Engine", check_risk_engine),
+        ("Health Monitor", check_health_monitor),
+        ("Offline Queue", check_offline_queue),
         ("Telegram", check_telegram),
         ("GPS", check_gps),
     ]

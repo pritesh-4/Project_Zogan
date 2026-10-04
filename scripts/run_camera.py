@@ -72,12 +72,14 @@ from ai.geofence import (
     create_default_zones,
 )
 from ai.risk_engine import (
-    RiskEngine,
-    MovementTrendTracker,
+    RISK_CRITICAL,
+    RISK_HIGH,
     RISK_LOW,
     RISK_MEDIUM,
-    RISK_HIGH,
-    RISK_CRITICAL,
+    AlertPolicy,
+    EventLifecycleManager,
+    MovementTrendTracker,
+    RiskEngine,
 )
 from ai.renderer import (
     draw_bounding_box,
@@ -87,7 +89,20 @@ from ai.renderer import (
 from ai.model_manager import resolve_model_path
 
 # Alert system
-from alerts import create_alert_event, dispatch_alert
+from alerts import (
+    create_alert_event,
+    dispatch_alert,
+    drain_delivery_queue_async,
+    get_alert_queue,
+)
+
+# Observability & System Health (Phase 8 & Phase 9)
+from monitoring import (
+    SUBSYSTEM_DEGRADED,
+    SUBSYSTEM_FAILED,
+    SUBSYSTEM_READY,
+    SystemHealthMonitor,
+)
 
 # YOLO import
 from ultralytics import YOLO
@@ -130,12 +145,19 @@ resolve_active_model = resolve_model_path
 # =============================================================================
 
 
-def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
+def trigger_alert(
+    max_confidence,
+    tracked_info=None,
+    risk_info=None,
+    health_monitor=None,
+    async_delivery=False,
+):
     """
     Triggers local alert actions and dispatches confirmed incident events.
     Prints a prominent notice to the terminal with timestamp, confidence,
     detailed tracking, and geographic risk context.
     Dispatches structured AlertEvent to local logs and optionally Telegram.
+    Local persistence strictly precedes remote notification.
     """
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     conf_percent = max_confidence * 100
@@ -160,6 +182,8 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
         print(f"   Approach Trend: {r_trend}")
         print(f"   Group Size:     {r_group}")
         print(f"   Geo Mode:       {r_mode}")
+        if risk_info.get("reasons"):
+            print(f"   Primary Reason: {risk_info['reasons'][0]}")
 
     if tracked_info:
         for t in tracked_info:
@@ -174,16 +198,40 @@ def trigger_alert(max_confidence, tracked_info=None, risk_info=None):
     print(f"   Cooldown initiated: {config.ALERT_COOLDOWN_SECONDS}s")
     print("=" * 60 + "\n")
 
-    # Dispatch structured event locally (JSONL) and remotely (Telegram)
+    # Dispatch structured event locally (JSONL) first, then remote (Telegram)
     try:
         event = create_alert_event(
             confidence=max_confidence,
             tracked_info=tracked_info,
             risk_info=risk_info,
         )
-        return dispatch_alert(event)
+
+        def _on_delivery_done(result):
+            if health_monitor and result:
+                health_monitor.record_delivery_result(
+                    success=result.get("telegram_sent", False),
+                    error=result.get("telegram_error"),
+                    pending_count=result.get("pending_count", get_alert_queue().pending_count),
+                )
+
+        res = dispatch_alert(
+            event,
+            async_delivery=async_delivery,
+            callback=_on_delivery_done if async_delivery else None,
+        )
+
+        if not async_delivery and health_monitor and res:
+            health_monitor.record_delivery_result(
+                success=res.get("telegram_sent", False),
+                error=res.get("telegram_error"),
+                pending_count=res.get("pending_count", get_alert_queue().pending_count),
+            )
+
+        return res
     except Exception as e:
         print(f"[ALERT DISPATCH ERROR] Failed to dispatch alert: {e}")
+        if health_monitor:
+            health_monitor.record_error("dispatcher", e)
         return None
 
 
@@ -275,11 +323,24 @@ def main(
     if tracker_config is None:
         tracker_config = config.TRACKER_CONFIG
 
+    # Initialize Phase 8 System Health & Observability Monitor
+    health_monitor = SystemHealthMonitor(
+        fps_minimum=config.HEALTH_FPS_MINIMUM_HEALTHY,
+        fps_window_size=config.HEALTH_FPS_WINDOW_SIZE,
+        freshness_degraded_seconds=config.HEALTH_FRESHNESS_DEGRADED_SECONDS,
+        freshness_offline_seconds=config.HEALTH_FRESHNESS_OFFLINE_SECONDS,
+        max_consecutive_frame_failures=config.HEALTH_MAX_CONSECUTIVE_FRAME_FAILURES,
+        max_consecutive_frame_failures_offline=config.HEALTH_MAX_CONSECUTIVE_FRAME_FAILURES_OFFLINE,
+        max_consecutive_errors_degraded=config.HEALTH_MAX_CONSECUTIVE_ERRORS_DEGRADED,
+        max_consecutive_errors_offline=config.HEALTH_MAX_CONSECUTIVE_ERRORS_OFFLINE,
+    )
+
     # 1. Resolve model path
     use_custom_flag = config.USE_CUSTOM_MODEL if use_custom is None else use_custom
     model_path, model_label = resolve_model_path(use_custom_flag, model_override)
 
     if not model_path or not Path(model_path).exists():
+        health_monitor.record_detector_status(SUBSYSTEM_FAILED, "Model file not found")
         print("\n" + "=" * 60)
         print("ERROR: Model not found.")
         print(f"Expected: {config.CUSTOM_MODEL_PATH} or {config.FALLBACK_CUSTOM_PATH}")
@@ -290,7 +351,9 @@ def main(
     # 2. Load YOLO model
     try:
         model = YOLO(model_path)
+        health_monitor.record_detector_status(SUBSYSTEM_READY)
     except Exception as e:
+        health_monitor.record_detector_status(SUBSYSTEM_FAILED, str(e))
         print(f"\nERROR: Failed to load YOLO model from '{model_path}': {e}")
         return False
 
@@ -350,8 +413,10 @@ def main(
         print(f"[INFO] Initializing webcam (camera index {input_source})...")
 
     camera = cv2.VideoCapture(input_source)
+    camera_opened = camera.isOpened()
+    health_monitor.record_camera_open(camera_opened, source_desc)
 
-    if not camera.isOpened():
+    if not camera_opened:
         print(f"ERROR: Unable to open {source_desc}.")
         if not is_video_file:
             print("Check that your camera is connected and not in use by another application.")
@@ -366,16 +431,50 @@ def main(
         max_lost_frames=config.MAX_LOST_FRAMES,
         window_size=config.SMOOTHING_WINDOW_FRAMES,
     )
+    health_monitor.record_tracker_status(SUBSYSTEM_READY)
     fallback_track_id = 1
 
-    # Initialize geofencing and risk engine
+    # Initialize geofencing and risk engine 2.0
     zones = create_default_zones(
         village_center=(config.VILLAGE_CENTER_LAT, config.VILLAGE_CENTER_LON),
         village_radius=config.VILLAGE_RADIUS_METERS,
         buffer_radius=config.BUFFER_RADIUS_METERS,
         forest_radius=config.FOREST_RADIUS_METERS,
     )
-    risk_engine = RiskEngine()
+    risk_engine = RiskEngine(
+        low_max=config.RISK_LEVEL_LOW_MAX,
+        medium_max=config.RISK_LEVEL_MEDIUM_MAX,
+        high_max=config.RISK_LEVEL_HIGH_MAX,
+        alert_on_levels=config.ALERT_ON_LEVELS,
+        confirmation_frames=config.PERSISTENCE_CONFIRMATION_FRAMES,
+        critical_min_confidence=config.CRITICAL_MIN_CONFIDENCE,
+        critical_max_distance=config.CRITICAL_MAX_DISTANCE_METERS,
+        single_frame_risk_cap=config.SINGLE_FRAME_RISK_CAP,
+        critical_requires_persistence=config.CRITICAL_REQUIRES_PERSISTENCE,
+        herd_enabled=config.HERD_ENABLED,
+        herd_threshold=config.HERD_THRESHOLD,
+        movement_enabled=config.MOVEMENT_RISK_ENABLED,
+        max_zone_points=config.MAX_ZONE_POINTS,
+        max_proximity_points=config.MAX_PROXIMITY_POINTS,
+        max_trend_points=config.MAX_TREND_POINTS,
+        max_persistence_points=config.MAX_PERSISTENCE_POINTS,
+        max_group_points=config.MAX_GROUP_POINTS,
+        max_confidence_points=config.MAX_CONFIDENCE_POINTS,
+        max_duration_points=config.MAX_DURATION_POINTS,
+        max_history_points=config.MAX_HISTORY_POINTS,
+    )
+    health_monitor.record_risk_engine_status(SUBSYSTEM_READY)
+    event_manager = EventLifecycleManager(
+        confirmation_frames=config.PERSISTENCE_CONFIRMATION_FRAMES,
+        resolution_frames=config.EVENT_RESOLUTION_FRAMES,
+        resolution_seconds=config.EVENT_RESOLUTION_SECONDS,
+    )
+    alert_policy = AlertPolicy(
+        alert_on_levels=config.ALERT_ON_LEVELS,
+        cooldown_seconds=config.ALERT_COOLDOWN_SECONDS,
+        allow_escalation_bypass=config.ESCALATION_COOLDOWN_BYPASS,
+        confirmation_frames=config.PERSISTENCE_CONFIRMATION_FRAMES,
+    )
     trend_tracker = MovementTrendTracker(
         window_size=config.TREND_WINDOW_SIZE,
         stability_threshold_meters=config.TREND_STABILITY_THRESHOLD_METERS,
@@ -388,6 +487,8 @@ def main(
 
     # State variables
     consecutive_elephant_frames = 0
+    detector_consecutive_failures = 0
+    detector_total_failures = 0
     last_alert_time = 0.0
     alert_banner_until = 0.0
     prev_frame_time = time.time()
@@ -397,13 +498,71 @@ def main(
 
     try:
         while True:
+            current_time = time.time()
             success, frame = camera.read()
+            health_monitor.record_frame_read(success, now=current_time)
+            health_monitor.record_heartbeat(now=current_time)
+
             if not success:
                 if is_video_file:
+                    snap = health_monitor.evaluate(current_time)
+                    transition = health_monitor.check_transition(snap)
+                    if transition:
+                        old_st, new_st, reason = transition
+                        print(f"\n[SYSTEM HEALTH] {old_st} -> {new_st} (Reason: {reason})")
                     print(f"\n[INFO] End of video file '{input_source}'. Playback finished.")
+                    break
+
+                # Live camera temporary failure and reconnection recovery (Phase 9)
+                max_reconnect = getattr(config, "CAMERA_MAX_RECONNECT_ATTEMPTS", 3)
+                reconnect_delay = getattr(config, "CAMERA_RECONNECT_DELAY_SECONDS", 1.0)
+                reconnect_enabled = getattr(config, "CAMERA_RECONNECT_ENABLED", True)
+
+                if reconnect_enabled:
+                    print(
+                        f"\n[WARNING] Camera read failed. Attempting controlled recovery "
+                        f"(max {max_reconnect} attempts)..."
+                    )
+                    reconnected = False
+                    for attempt in range(1, max_reconnect + 1):
+                        health_monitor.record_error(
+                            "camera",
+                            f"Camera stream disconnected, reconnect attempt {attempt}/{max_reconnect}",
+                            fatal=False,
+                            now=time.time(),
+                        )
+                        camera.release()
+                        time.sleep(reconnect_delay)
+                        print(
+                            f"[CAMERA RECOVERY] Reconnect attempt {attempt}/{max_reconnect} on index {input_source}..."
+                        )
+                        new_cam = cv2.VideoCapture(input_source)
+                        if new_cam.isOpened():
+                            ok, test_frame = new_cam.read()
+                            if ok:
+                                camera = new_cam
+                                frame = test_frame
+                                success = True
+                                reconnected = True
+                                health_monitor.record_camera_open(True, source_desc, now=time.time())
+                                health_monitor.record_frame_read(True, now=time.time())
+                                print(f"[CAMERA RECOVERY SUCCESS] Camera reconnected on attempt {attempt}.")
+                                break
+
+                    if not reconnected:
+                        health_monitor.record_camera_open(False, source_desc, now=time.time())
+                        snap = health_monitor.evaluate(time.time())
+                        transition = health_monitor.check_transition(snap)
+                        if transition:
+                            old_st, new_st, reason = transition
+                            print(f"\n[SYSTEM HEALTH] {old_st} -> {new_st} (Reason: {reason})")
+                        print(
+                            f"\n[ERROR] Camera disconnected and recovery failed after {max_reconnect} attempts. Halting."
+                        )
+                        break
                 else:
                     print("\nWARNING: Failed to read frame from camera.")
-                break
+                    break
 
             frame_number += 1
             if max_frames and frame_number > max_frames:
@@ -418,8 +577,80 @@ def main(
             if delta_time > 0:
                 fps = 0.9 * fps + 0.1 * (1.0 / delta_time) if fps > 0 else (1.0 / delta_time)
 
-            # Run YOLO detection & ByteTrack tracking
-            results = model.track(frame, persist=True, tracker=tracker_config, verbose=False)
+            # Periodic background queue draining (Phase 9 Offline-First)
+            if frame_number % 30 == 0 and getattr(config, "OFFLINE_QUEUE_ENABLED", True):
+                alert_q = get_alert_queue()
+                if alert_q.pending_count > 0:
+
+                    def _on_queue_drain(stats):
+                        if stats.get("attempted", 0) > 0:
+                            health_monitor.record_delivery_result(
+                                success=(stats.get("sent", 0) > 0),
+                                error=None if stats.get("failed", 0) == 0 else "Retry attempt failed",
+                                pending_count=stats.get("pending_remaining", 0),
+                            )
+                        else:
+                            health_monitor.update_pending_alerts(stats.get("pending_remaining", 0))
+
+                    drain_delivery_queue_async(queue=alert_q, callback=_on_queue_drain)
+                else:
+                    health_monitor.update_pending_alerts(0)
+
+            # Run YOLO detection & ByteTrack tracking (with recoverable inference failure handling)
+            try:
+                results = model.track(frame, persist=True, tracker=tracker_config, verbose=False)
+                detector_consecutive_failures = 0
+                health_monitor.record_detector_status(SUBSYSTEM_READY)
+            except Exception as e:
+                detector_consecutive_failures += 1
+                detector_total_failures += 1
+                max_det_fails = getattr(config, "DETECTOR_MAX_CONSECUTIVE_FAILURES", 3)
+                is_fatal = detector_consecutive_failures >= max_det_fails
+                det_status = SUBSYSTEM_FAILED if is_fatal else SUBSYSTEM_DEGRADED
+                health_monitor.record_detector_status(
+                    det_status,
+                    f"Inference exception ({detector_consecutive_failures}/{max_det_fails}): {e}",
+                    now=current_time,
+                )
+                print(f"\n[DETECTOR ERROR] Inference failure #{detector_consecutive_failures}: {e}")
+
+                # SAFE FAILURE: Do NOT reset consecutive_elephant_frames to 0!
+                # Do NOT invent an all-clear or false LOW risk!
+                current_health = health_monitor.evaluate(current_time)
+                hud_status = (
+                    f"DETECTOR FAILED ({detector_consecutive_failures})"
+                    if is_fatal
+                    else f"DETECTOR DEGRADED ({detector_consecutive_failures})"
+                )
+                hud_color = config.COLOR_ALERT_RED if is_fatal else config.COLOR_WARN_YELLOW
+                cooldown_remaining = max(0.0, config.ALERT_COOLDOWN_SECONDS - (current_time - last_alert_time))
+                draw_hud(
+                    frame=frame,
+                    status_text=hud_status,
+                    status_color=hud_color,
+                    detection_count=consecutive_elephant_frames,
+                    fps=fps,
+                    cooldown_remaining=cooldown_remaining,
+                    model_name=model_label,
+                    tracking_summary=tracker.get_hud_summary(),
+                    tracked_count=len(tracker.tracks),
+                    risk_assessment=current_risk_assessment,
+                    geo_mode="SIMULATION" if sim_mode else "OFF",
+                    health_snapshot=current_health,
+                )
+                if not no_show:
+                    cv2.imshow("Elephant Detection & Tracking - Early Warning System", frame)
+                    key = cv2.waitKey(1) & 0xFF
+                    if key in [ord("q"), ord("Q")]:
+                        break
+
+                if is_fatal:
+                    print(
+                        f"\n[CRITICAL] Detector failed {detector_consecutive_failures} consecutive times. "
+                        f"Halting safely to prevent unmonitored operation."
+                    )
+                    break
+                continue
 
             candidate_elephants = []
             low_conf_elephants = []
@@ -458,10 +689,15 @@ def main(
             active_tracks = tracker.update(detections_to_track, frame_idx=frame_number)
 
             # =================================================================
-            # 🗺️ GEOFENCING & RISK ASSESSMENT
+            # 🗺️ GEOFENCING & INTELLIGENT THREAT ASSESSMENT 2.0
             # =================================================================
             elephant_found_in_frame = len(active_tracks) > 0
             max_elephant_confidence = max([t.confidence for t in active_tracks], default=0.0)
+
+            if elephant_found_in_frame:
+                consecutive_elephant_frames += 1
+            else:
+                consecutive_elephant_frames = 0
 
             if elephant_found_in_frame and sim_mode:
                 # Get MOVING simulated coordinates (not static!)
@@ -477,46 +713,81 @@ def main(
                     trend=approach_trend,
                     group_size=len(active_tracks),
                     confidence=max_elephant_confidence,
+                    persistence_frames=consecutive_elephant_frames,
+                    duration_seconds=event_manager.get_duration(current_time),
+                    tracked_objects=[t.track_id for t in active_tracks],
+                    event_id=event_manager.active_event_id,
                 )
+
+                transition = event_manager.update(
+                    elephant_detected=True,
+                    current_time=current_time,
+                    risk_assessment=current_risk_assessment,
+                )
+
+                if transition.event_id and not current_risk_assessment.event_id:
+                    current_risk_assessment.event_id = transition.event_id
+
+                # Evaluate decoupled Alert Policy
+                decision = alert_policy.evaluate(
+                    assessment=current_risk_assessment,
+                    current_time=current_time,
+                    last_alert_time=last_alert_time,
+                    last_alert_level=event_manager.last_alert_level,
+                    is_escalated=transition.is_escalated,
+                )
+
+                if min_alert_risk and current_risk_assessment.level not in (min_alert_risk, RISK_CRITICAL, RISK_HIGH):
+                    decision.should_dispatch = False
+
+                if decision.should_dispatch:
+                    tracked_alert_info = [
+                        {"id": t.track_id, "conf": t.confidence, "movement": t.movement} for t in active_tracks
+                    ]
+                    risk_info_dict = current_risk_assessment.to_dict()
+                    trigger_alert(
+                        max_elephant_confidence,
+                        tracked_info=tracked_alert_info,
+                        risk_info=risk_info_dict,
+                        health_monitor=health_monitor,
+                        async_delivery=True,
+                    )
+                    event_manager.record_alert(current_risk_assessment.level, current_time)
+                    last_alert_time = current_time
+                    alert_banner_until = current_time + config.ALERT_BANNER_DURATION_SECONDS
+
             elif not elephant_found_in_frame:
                 current_risk_assessment = None
+                transition = event_manager.update(
+                    elephant_detected=False,
+                    current_time=current_time,
+                )
+                if transition.transition_type == "RESOLVED":
+                    print(
+                        f"\n[EVENT RESOLVED] Elephant left monitored scene. "
+                        f"Event ID: {transition.resolved_event_id} | Total Duration: {transition.duration:.1f}s | "
+                        f"Peak Risk: {transition.max_risk_level}"
+                    )
+                    resolved_event = create_alert_event(
+                        confidence=0.0,
+                        event_id=transition.resolved_event_id,
+                        risk_info={
+                            "risk_level": "LOW",
+                            "risk_score": 0,
+                            "event_state": "RESOLVED",
+                            "is_resolved": True,
+                            "resolution_time": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                            "duration_seconds": round(transition.duration, 1),
+                        },
+                    )
+                    dispatch_alert(resolved_event, send_telegram=False, verbose=False)
 
-            # =================================================================
-            # 🔄 PERSISTENT DETECTION & RESET LOGIC
-            # =================================================================
-            if elephant_found_in_frame:
-                consecutive_elephant_frames += 1
-            else:
-                consecutive_elephant_frames = 0
-
-            # =================================================================
-            # 🚨 ALERT & COOLDOWN LOGIC
-            # =================================================================
+            # Cooldown calculation for HUD
             time_since_last_alert = current_time - last_alert_time
             cooldown_active = time_since_last_alert < config.ALERT_COOLDOWN_SECONDS
             cooldown_remaining = (
                 max(0.0, config.ALERT_COOLDOWN_SECONDS - time_since_last_alert) if cooldown_active else 0.0
             )
-
-            if consecutive_elephant_frames >= config.REQUIRED_DETECTIONS:
-                should_alert = not cooldown_active
-                if min_alert_risk and current_risk_assessment:
-                    should_alert = should_alert and (
-                        current_risk_assessment.level in (min_alert_risk, RISK_CRITICAL, RISK_HIGH)
-                    )
-
-                if should_alert:
-                    tracked_alert_info = [
-                        {"id": t.track_id, "conf": t.confidence, "movement": t.movement} for t in active_tracks
-                    ]
-                    risk_info_dict = current_risk_assessment.to_dict() if current_risk_assessment else None
-                    trigger_alert(
-                        max_elephant_confidence,
-                        tracked_info=tracked_alert_info,
-                        risk_info=risk_info_dict,
-                    )
-                    last_alert_time = current_time
-                    alert_banner_until = current_time + config.ALERT_BANNER_DURATION_SECONDS
 
             # =================================================================
             # 🎨 RENDER VISUAL OUTPUT
@@ -574,6 +845,18 @@ def main(
                     is_target=False,
                 )
 
+            # Update health monitoring with frame processing metrics
+            health_monitor.record_frame_processed(
+                detection_count=len(candidate_elephants),
+                active_tracks=len(active_tracks),
+                now=current_time,
+            )
+            current_health = health_monitor.evaluate(current_time)
+            health_transition = health_monitor.check_transition(current_health)
+            if health_transition:
+                old_st, new_st, reason = health_transition
+                print(f"\n[SYSTEM HEALTH] {old_st} -> {new_st} (Reason: {reason})")
+
             # Determine visual status
             if consecutive_elephant_frames >= config.REQUIRED_DETECTIONS:
                 if current_risk_assessment and current_risk_assessment.level in (RISK_CRITICAL, RISK_HIGH):
@@ -589,7 +872,7 @@ def main(
                 status_text = "MONITORING (No Elephant Detected)"
                 status_color = config.COLOR_SAFE_GREEN
 
-            # Render HUD
+            # Render HUD with health snapshot
             draw_hud(
                 frame=frame,
                 status_text=status_text,
@@ -602,6 +885,7 @@ def main(
                 tracked_count=len(active_tracks),
                 risk_assessment=current_risk_assessment,
                 geo_mode="SIMULATION" if sim_mode else "OFF",
+                health_snapshot=current_health,
             )
 
             # Render alert banner if active
@@ -620,6 +904,7 @@ def main(
     except KeyboardInterrupt:
         print("\n[INFO] Keyboard interrupt received. Exiting...")
     except Exception as e:
+        health_monitor.record_error("pipeline", e, fatal=True)
         print(f"\nERROR: Unexpected error during execution: {e}")
         return False
     finally:
@@ -627,6 +912,13 @@ def main(
         camera.release()
         if not no_show:
             cv2.destroyAllWindows()
+        final_health = health_monitor.get_snapshot()
+        print(
+            f"[INFO] Final System Health: {final_health.overall_status} "
+            f"(Uptime: {final_health.uptime_seconds:.1f}s, "
+            f"Processed: {final_health.processed_frames}/{final_health.total_frames} frames, "
+            f"Errors: {final_health.error_count})"
+        )
         print("[INFO] Shutdown complete. Goodbye!")
 
     return True

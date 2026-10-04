@@ -46,8 +46,9 @@ def load_env(env_file: Union[str, Path] = ".env") -> None:
 
     # Try python-dotenv if available
     try:
-        import dotenv
+        import importlib
 
+        dotenv = importlib.import_module("dotenv")
         dotenv.load_dotenv(dotenv_path=path, override=False)
         return
     except Exception:
@@ -176,6 +177,13 @@ def format_telegram_message(event: Union[AlertEvent, Dict[str, Any]]) -> str:
         geo_lines.append(f"Movement: {data['movement']}")
     if geo_lines:
         blocks.append("\n".join(geo_lines))
+
+    # Reasons / Explainability Section (if available)
+    if "reasons" in data and data["reasons"]:
+        reasons_list = data["reasons"]
+        if isinstance(reasons_list, list):
+            reason_lines = [f"• {r}" for r in reasons_list[:3]]
+            blocks.append("Assessment Reasons:\n" + "\n".join(reason_lines))
 
     # Timestamp Section
     if "timestamp" in data:

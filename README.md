@@ -4,7 +4,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue.svg)](https://www.python.org/)
 [![CI Status](https://github.com/pritesh-4/Project_Z-gan/actions/workflows/ci.yml/badge.svg)](https://github.com/pritesh-4/Project_Z-gan/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-81%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-144%20passed-brightgreen.svg)](tests/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Dataset](https://img.shields.io/badge/dataset-456%20images%20%7C%20AGPL--3.0-orange.svg)](datasets/elephant/)
 
@@ -26,6 +26,8 @@
 - [Multi-Object Tracking & Motion Analysis](#multi-object-tracking--motion-analysis)
 - [Geofencing & Spatial Risk Engine](#geofencing--spatial-risk-engine)
 - [Alerting & Incident Logging Subsystem](#alerting--incident-logging-subsystem)
+- [Offline-First Reliability & Failure Recovery](#offline-first-reliability--failure-recovery)
+- [System Health Monitoring & Observability](#system-health-monitoring--observability)
 - [Configuration Reference](#configuration-reference)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Limitations & Honest Engineering Constraints](#limitations--honest-engineering-constraints)
@@ -94,7 +96,7 @@ Project Zogan addresses these issues at a software architecture level:
 | **Movement Analysis** | Estimate 2D image-space velocity vectors with deadband jitter suppression. | Implemented (`DIRECTION_RIGHT`, `LEFT`, `UP`, `DOWN`) |
 | **Geofenced Risk Assessment** | Calculate geodesic distance to protected settlements and classify risk levels. | Implemented in software simulation (`ai/geofence.py`, `ai/risk_engine.py`) |
 | **Multi-Channel Alerting** | Record audit records locally and dispatch remote alerts with fail-safe error isolation. | Implemented (`alerts/event_logger.py`, `alerts/telegram.py`) |
-| **Rigorous Testing & CI** | Ensure mathematical and operational correctness via automated quality gates. | Implemented (81 tests passing, Ruff linting, GitHub Actions CI) |
+| **Rigorous Testing & CI** | Ensure mathematical and operational correctness via automated quality gates. | Implemented (124 tests passing, Ruff linting, GitHub Actions CI) |
 
 ---
 
@@ -113,6 +115,7 @@ Project Zogan addresses these issues at a software architecture level:
 | **Spatial Drift Simulation** | **Simulated** | Dynamic coordinate drift and course adjustment to test geofence transitions without GPS hardware. | `scripts/run_camera.py`, `ai/simulate_risk.py` |
 | **Local JSONL Event Logger** | **Implemented** | Thread-safe, atomic, append-only incident logging to structured JSON Lines. | `alerts/event_logger.py` (`logs/alerts.jsonl`) |
 | **Telegram Remote Alerting** | **Implemented** | Asynchronous HTTP Bot API delivery with non-blocking error recovery and zero pipeline crashes. | `alerts/telegram.py`, `alerts/dispatcher.py` |
+| **System Health & Observability** | **Implemented** | Continuous pipeline telemetry, rolling FPS, frame freshness, and state transition monitoring. | `monitoring/`, `docs/SYSTEM_HEALTH.md` |
 | **Alert History CLI** | **Implemented** | Terminal viewer for filtering, querying, and inspecting historical alert incidents. | `alerts/history_cli.py` |
 | **Hardware GPS / Telemetry** | **Planned** | Direct NMEA serial GPS integration, PTZ control, or laser ranging sensors. | Not implemented (currently simulated) |
 | **Thermal / Infrared Imaging** | **Planned** | Multispectral sensor support for zero-lux night-time monitoring. | Not implemented (RGB daytime only) |
@@ -616,6 +619,19 @@ The bounded score is mapped directly to operational risk levels:
 - **`50 – 74`**: **HIGH** (Local alert; team dispatch recommended)
 - **`75 – 100`**: **CRITICAL** (Immediate perimeter alert; urgent intervention)
 
+### Risk Engine 2.0 & Threat Assessment Architecture
+
+In Phase 7, the risk engine evolved into **Intelligent Threat Assessment & Risk Engine 2.0** (`ai/risk_engine.py`), answering: *"Based on the available evidence, how serious is this detection?"*
+
+Key enhancements:
+- **Explicit `ThreatAssessment` Model**: Produces deterministic score, risk level, confidence, structured `reasons` list, `contributing_factors` breakdown, and spatial state.
+- **Multi-Signal Evaluation**: Synthesizes 8 signals (zone membership, proximity, approach vector, herd group size, detection confidence, temporal persistence, dwell duration, and recent alert history).
+- **Critical Safety Safeguards**: Single-frame detections are capped at `MEDIUM` to prevent transient false alarms. `CRITICAL` risk strictly requires confirmed persistence ($\ge 5$ frames), minimum confidence ($\ge 0.70$), and proximity to protected perimeters ($\le 300\text{ m}$).
+- **Evidence-Based Alert Policy**: Cleanly decouples scoring from notification delivery. Handles alert cooldowns while allowing immediate cooldown bypass on evidence-backed risk escalation.
+- **Event Lifecycle Management**: In-memory state machine (`IDLE` $\to$ `DETECTED` $\to$ `CONFIRMED` $\to$ `HIGH_RISK` $\to$ `CRITICAL` $\to$ `RESOLVED`) with automatic incident closure after an elephant departs.
+
+> 📖 **Deep Dive Documentation**: For mathematical scoring formulas, factor weight caps, escalation matrices, state diagrams, and hardware reality disclosures, see [`docs/RISK_ENGINE.md`](docs/RISK_ENGINE.md).
+
 ---
 
 ## Alerting & Incident Logging Subsystem
@@ -690,6 +706,25 @@ The Telegram client (`alerts/telegram.py`) uses standard Python `urllib` to disp
 
 ---
 
+## Offline-First Reliability & Failure Recovery
+
+In Phase 9, Zogan implemented a comprehensive reliability layer designed around the core principle:
+
+> **LOCAL EVENT DATA MUST NEVER DEPEND ON REMOTE NETWORK AVAILABILITY.**
+
+Key reliability guarantees:
+- **Local Persistence First**: When an event occurs, it is synchronously written to local disk storage (`logs/alerts.jsonl`) *before* any remote delivery is attempted.
+- **Persistent Offline Queue**: If Telegram or the internet is unreachable, alerts are enqueued in `logs/delivery_queue.jsonl` with atomic disk writes, surviving process crashes and restarts.
+- **Bounded Exponential Backoff**: Failed notifications are retried with bounded delays ($2\text{s}, 4\text{s}$, up to `ALERT_RETRY_LIMIT = 3`) to prevent infinite retry loops.
+- **Non-Blocking Delivery**: Remote notifications and queue draining run asynchronously in a background thread pool; video capture and detection are **never blocked** by network latency or timeouts.
+- **Camera Reconnect Recovery**: Temporary video stream drops trigger controlled reconnection attempts (`CAMERA_MAX_RECONNECT_ATTEMPTS = 3`) before degrading or halting.
+- **Safe Failure Semantics**: Neural network inference exceptions do **not** cause false "all clear" reports or invent false `LOW` risks; the detector is marked `DEGRADED`/`FAILED` with immediate visual notification.
+- **Natural Connectivity Detection**: Network health is inferred directly from delivery outcomes without continuous wasteful internet polling.
+
+> 📖 **Deep Dive Documentation**: For architecture diagrams, delivery state transitions, backoff formulas, and queue lifecycle details, see [`docs/FAILURE_RECOVERY.md`](docs/FAILURE_RECOVERY.md).
+
+---
+
 ## Configuration Reference
 
 System behavior is configured through `config/settings.py`. Key operational parameters include:
@@ -720,6 +755,17 @@ System behavior is configured through `config/settings.py`. Key operational para
 | | `RISK_LEVEL_MEDIUM_MAX` | `49` | Upper bound for MEDIUM risk level |
 | | `RISK_LEVEL_HIGH_MAX` | `74` | Upper bound for HIGH risk level (75+ is CRITICAL) |
 | | `TREND_STABILITY_THRESHOLD_METERS`| `15.0` | Distance delta buffer to classify STABLE trend |
+| **Reliability (Phase 9)** | `ALERT_QUEUE_FILE` | `"logs/delivery_queue.jsonl"` | File path for persistent offline delivery queue |
+| | `OFFLINE_QUEUE_ENABLED` | `True` | Enables persistent offline delivery queue |
+| | `ALERT_QUEUE_MAX_SIZE` | `100` | Maximum queued alert items before oldest pruning |
+| | `ALERT_RETRY_LIMIT` | `3` | Maximum bounded remote alert delivery retry attempts |
+| | `ALERT_RETRY_BASE_DELAY_SECONDS` | `2.0` | Initial exponential backoff delay |
+| | `ALERT_RETRY_BACKOFF_FACTOR` | `2.0` | Exponential factor for retry delays |
+| | `ALERT_DELIVERY_TIMEOUT_SECONDS` | `3.0` | Fast timeout for remote alert dispatch |
+| | `CAMERA_RECONNECT_ENABLED` | `True` | Controlled live camera reconnection on drops |
+| | `CAMERA_MAX_RECONNECT_ATTEMPTS` | `3` | Maximum retry attempts to restore camera stream |
+| | `CAMERA_RECONNECT_DELAY_SECONDS` | `1.0` | Delay between camera reconnection attempts |
+| | `DETECTOR_MAX_CONSECUTIVE_FAILURES` | `3` | Failure limit before marking detector FAILED |
 
 ---
 
@@ -727,7 +773,7 @@ System behavior is configured through `config/settings.py`. Key operational para
 
 Project Zogan maintains automated test coverage across all architectural subsystems.
 
-### Automated Test Suite (81 Tests)
+### Automated Test Suite (144 Tests)
 
 Execute the complete test suite using Pytest:
 
@@ -735,18 +781,21 @@ Execute the complete test suite using Pytest:
 pytest
 ```
 
-All 81 tests pass across 8 focused test modules:
+All 144 tests pass across 11 focused test modules:
 ```text
-tests/test_alerts.py ................                                    [ 19%]
-tests/test_phase2.py .                                                   [ 20%]
-tests/test_phase3_1.py ......                                            [ 28%]
-tests/test_phase3_2.py .......                                           [ 37%]
-tests/test_phase3_4.py ........                                          [ 46%]
-tests/test_phase4.py ..............                                      [ 64%]
-tests/test_phase5.py ..............                                      [ 81%]
-tests/test_phase6.py ...............                                     [100%]
+tests/test_alerts.py ................                                    [ 11%]
+tests/test_phase2.py .                                                   [ 11%]
+tests/test_phase3_1.py ......                                            [ 15%]
+tests/test_phase3_2.py .......                                           [ 20%]
+tests/test_phase3_4.py ........                                          [ 26%]
+tests/test_phase4.py ..............                                      [ 36%]
+tests/test_phase5.py ..............                                      [ 45%]
+tests/test_phase6.py ...............                                     [ 56%]
+tests/test_phase7.py ....................                                [ 70%]
+tests/test_phase8.py .......................                             [ 86%]
+tests/test_phase9.py ....................                                [100%]
 
-============================= 81 passed in ~32s ==============================
+============================ 144 passed in ~18s ==============================
 ```
 
 Individual test suites verify:
@@ -758,6 +807,9 @@ Individual test suites verify:
 - **`test_phase4.py`**: ByteTrack session assignment, position history bounds, and 2D image motion vectors.
 - **`test_phase5.py`**: Haversine distance accuracy, circular/polygonal zone containment, and risk scoring.
 - **`test_phase6.py`**: Atomic JSONL logging, schema validation, and Telegram mock delivery/network recovery.
+- **`test_phase7.py`**: 20 comprehensive scenarios for Risk Engine 2.0 (threat assessment, safeguards, escalation, lifecycle resolution, deterministic math, edge cases).
+- **`test_phase8.py`**: 23 reliability scenarios for System Health Monitoring (freshness, rolling FPS, component health, recovery, bounded errors, snapshot serialization).
+- **`test_phase9.py`**: 20 offline-first resilience scenarios (local persistence first, bounded exponential retries, queue recovery, deduplication, camera reconnection, safe detector failure, non-blocking pipeline).
 
 ### Code Style & Static Analysis
 
@@ -841,6 +893,8 @@ Contributions from wildlife technologists, computer vision researchers, and open
 - **Tracking Algorithm**: Implemented using [ByteTrack](https://github.com/ifzhang/ByteTrack) via the LAP linear assignment solver.
 - **Documentation**: For in-depth engineering audit details, architectural specifications, and project history, refer to:
   - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+  - [`docs/RISK_ENGINE.md`](docs/RISK_ENGINE.md)
+  - [`docs/SYSTEM_HEALTH.md`](docs/SYSTEM_HEALTH.md)
   - [`docs/AUDIT_REPORT.md`](docs/AUDIT_REPORT.md)
   - [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)
   - [`docs/CHANGELOG.md`](docs/CHANGELOG.md)

@@ -122,9 +122,11 @@ def draw_hud(
     tracked_count: int = 0,
     risk_assessment=None,
     geo_mode: str = "SIMULATION",
+    health_snapshot=None,
 ) -> None:
     """
     Draws an informative Heads-Up Display (HUD) overlay at the top of the video frame.
+    Supports system health monitoring overlay (Phase 8).
     """
     from ai.risk_engine import RISK_CRITICAL, RISK_HIGH, RISK_MEDIUM
 
@@ -132,8 +134,11 @@ def draw_hud(
 
     has_tracks = (tracked_count > 0) and bool(tracking_summary)
     has_risk = risk_assessment is not None and tracked_count > 0
+    has_reason = has_risk and bool(getattr(risk_assessment, "reasons", None))
 
-    if has_risk:
+    if has_reason:
+        bar_height = 110
+    elif has_risk:
         bar_height = 98
     elif has_tracks:
         bar_height = 80
@@ -177,7 +182,7 @@ def draw_hud(
         cv2.LINE_AA,
     )
 
-    # Row 2: Persistence / Cooldown info & FPS
+    # Row 2: Persistence / Cooldown info & System Health + FPS
     if 0 < detection_count < config.REQUIRED_DETECTIONS:
         sub_text = f"Persistence: {detection_count}/{config.REQUIRED_DETECTIONS} consecutive frames"
         sub_color = config.COLOR_WARN_YELLOW
@@ -199,7 +204,45 @@ def draw_hud(
         cv2.LINE_AA,
     )
 
-    fps_text = f"FPS: {fps:.1f}"
+    # Determine compact system health indicator (Phase 8)
+    health_str = ""
+    health_color = (255, 255, 255)
+    if health_snapshot is not None:
+        if hasattr(health_snapshot, "overall_status"):
+            h_overall = health_snapshot.overall_status
+            h_input = health_snapshot.input_status
+            h_q = getattr(health_snapshot, "pending_alert_count", 0)
+            h_net = getattr(health_snapshot, "network_status", "UNKNOWN")
+        elif isinstance(health_snapshot, dict):
+            h_overall = health_snapshot.get("overall_status", "UNKNOWN")
+            h_input = health_snapshot.get("input_status", "UNKNOWN")
+            h_q = health_snapshot.get("pending_alert_count", 0)
+            h_net = health_snapshot.get("network_status", "UNKNOWN")
+        else:
+            h_overall = str(health_snapshot)
+            h_input = "ONLINE"
+            h_q = 0
+            h_net = "UNKNOWN"
+
+        extra_info = ""
+        if h_net == "UNAVAILABLE":
+            extra_info += "NET:OFF | "
+        if h_q > 0:
+            extra_info += f"Q:{h_q} | "
+
+        if h_overall == "HEALTHY":
+            health_color = config.COLOR_SAFE_GREEN
+            health_str = f"SYS: {h_overall} | {extra_info}"
+        elif h_overall == "DEGRADED":
+            health_color = config.COLOR_WARN_YELLOW
+            health_str = f"SYS: {h_overall} ({h_input}) | {extra_info}"
+        elif h_overall == "OFFLINE":
+            health_color = config.COLOR_ALERT_RED
+            health_str = f"SYS: {h_overall} ({h_input}) | {extra_info}"
+        else:
+            health_str = f"SYS: {h_overall} | {extra_info}"
+
+    fps_text = f"{health_str}FPS: {fps:.1f}"
     (fps_w, _), _ = cv2.getTextSize(fps_text, cv2.FONT_HERSHEY_SIMPLEX, sub_scale, 1)
     cv2.putText(
         frame,
@@ -207,7 +250,7 @@ def draw_hud(
         (width - fps_w - 15, 48),
         cv2.FONT_HERSHEY_SIMPLEX,
         sub_scale,
-        (255, 255, 255),
+        health_color,
         1,
         cv2.LINE_AA,
     )
@@ -248,6 +291,24 @@ def draw_hud(
             1,
             cv2.LINE_AA,
         )
+
+        # Row 5: Primary Explainable Threat Reason
+        if has_reason:
+            primary_reason = r.reasons[0]
+            # Truncate if excessively long for single line
+            if len(primary_reason) > 85:
+                primary_reason = primary_reason[:82] + "..."
+            reason_text = f"REASON: {primary_reason}"
+            cv2.putText(
+                frame,
+                reason_text,
+                (15, 104),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.38 * scale_factor,
+                (220, 220, 220),
+                1,
+                cv2.LINE_AA,
+            )
 
 
 def draw_alert_banner(frame, risk_level: Optional[str] = None) -> None:
